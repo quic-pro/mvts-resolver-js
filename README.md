@@ -1,1 +1,1 @@
-# mvts-client-js
+# mvts-resolver-js
