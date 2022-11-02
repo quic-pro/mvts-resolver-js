@@ -1,5 +1,8 @@
+import {BigNumber} from '@ethersproject/bignumber';
+
+
 export type Router = {
-    chainId: number;
+    ttl: BigNumber;
+    chainId: BigNumber;
     adr: string;
-    poolCodeLength: number;
 };

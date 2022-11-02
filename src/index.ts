@@ -1,8 +1,4 @@
-import Guardian from './Guardian';
+import Resolver from './Resolver';
 
 
-const guardian = new Guardian();
-
-guardian.rootRouter()
-    .then(console.log)
-    .catch(console.log);
+const resolver = new Resolver();
