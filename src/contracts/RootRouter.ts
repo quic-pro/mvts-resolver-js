@@ -1,3 +1,4 @@
+import { BigNumber } from '@ethersproject/bignumber';
 import {Contract} from '@ethersproject/contracts';
 import {EtherscanProvider} from '@ethersproject/providers';
 
@@ -12,16 +13,24 @@ export default class RootRouter {
 
     // --- [ PRIVATE PROPERTIES ] -------------------------------------------------------------------------------------
 
-    private readonly contract: Contract;
+    private contract: Contract;
 
 
 
     // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
 
-    public getNextNode(): Promise<void> {
+    public updateContract(chainId: number, address: string): RootRouter {
+        try {
+            this.contract = new Contract(address, ABI, new EtherscanProvider(chainId));
+        } catch (error) {}
+
+        return this;
+    }
+
+    public getNextNode(code: number): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const rootRouter = await this.contract['rootRouter']();
+                const rootRouter = await this.contract['getNextNode'](BigNumber.from(code));
                 resolve(rootRouter);
             } catch(error) {
                 reject(error);
