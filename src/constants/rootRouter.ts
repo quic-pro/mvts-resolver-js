@@ -1,1 +1,1 @@
-export {abi as ABI} from '../abis/RootRouter.json';
+export {abi as DEFAULT_ABI} from '../abis/RootRouter.json';

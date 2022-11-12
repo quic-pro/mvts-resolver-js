@@ -1,10 +1,13 @@
-import Curator from './contracts/Curator';
-import RootRouter from './contracts/RootRouter';
-import Router from './contracts/Router';
+import {Curator, RootRouter, Router} from './contracts';
+
+import {ResolverConfig} from './types';
+
 
 export default class Resolver {
-    constructor() {
-        this.curator = new Curator();
+    constructor(config?: ResolverConfig) {
+        this.curator = new Curator(config?.curatorConfig);
+        this.rootRouter = new RootRouter(config?.rootRouterAbi);
+        this.router = new Router(config?.routerAbi);
         this.expirationTimeRootRouter = 0;
     }
 
@@ -12,69 +15,65 @@ export default class Resolver {
     // --- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
 
     private readonly curator: Curator;
+    private readonly rootRouter: RootRouter;
+    private readonly router: Router;
     private expirationTimeRootRouter: number;
-    private rootRouter: RootRouter | null;
 
 
     // --- [ PRIVATE METHODS ] ----------------------------------------------------------------------------------------
 
-    private getRootRouter(): Promise<RootRouter> {
-        if (!this.rootRouter || (Date.now() > this.expirationTimeRootRouter)) {
-            return new Promise((resolve, reject) => {
-                this.curator.rootRouter()
-                    .then((rootRouter) => {
-                        this.expirationTimeRootRouter = Date.now() + rootRouter.ttl.toNumber() * 1000;
-
-                        if (this.rootRouter) {
-                            this.rootRouter.updateContract(rootRouter.chainId.toNumber(), rootRouter.adr);
-                        } else {
-                            this.rootRouter = new RootRouter(rootRouter.chainId.toNumber(), rootRouter.adr);
-                        }
-
-                        resolve(this.rootRouter);
-
-                    })
-                    .catch(reject);
-            });
+    private updateRootRouter(): Promise<void> {
+        if (Date.now() < this.expirationTimeRootRouter) {
+            return Promise.resolve();
         }
 
-        return Promise.resolve(this.rootRouter);
+        return new Promise((resolve, reject) => {
+            this.curator.rootRouter()
+                .then((rootRouter) => {
+                    // TODO: Check if RootRouter is null
+                    this.expirationTimeRootRouter = Date.now() + rootRouter.ttl.toNumber() * 1000;
+                    this.rootRouter.updateContract(rootRouter.chainId.toNumber(), rootRouter.adr);
+                    resolve();
+                })
+                .catch(reject);
+        });
     }
 
     private getNextNode(router: RootRouter | Router, code: number): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            router.getNextNode(code)
-                .then(resolve)
-                .catch(reject);
-        });
+        return router.getNextNode(code);
     }
 
 
     // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
 
-    public async getEndNode(phoneNumber: string): Promise<any> {
-        const numbers = phoneNumber.split('');
-
+    public async getAddress(phoneNumber: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
+            const numbers = phoneNumber.split('');
+
             try {
-                let node: RootRouter | Router  = await this.getRootRouter();
+                await this.updateRootRouter();
 
-                if (this.rootRouter) {
-                    const numberForRoot = numbers.splice(0, 3);
-                    const code = +numberForRoot.join('')
+                let count = 0, poolCodeLength = 3;
+                while (true) {
+                    const code = +numbers.splice(0, poolCodeLength).join('');
+                    const node: RootRouter | Router = count == 0 ? this.rootRouter : this.router;
+                    const nextNode = await this.getNextNode(node, code);
 
-                    let result: string[] = [];
-                    do {
-                        result = await this.getNextNode(node, code);
-                        console.log(result);
-                        if (result[2] !== '0') {
-                            node = new Router(+result[2], result[3]);
-                        }
-                    } while (result[2] !== '0');
+                    if (nextNode[0] !== '200') {
+                        reject(new Error(nextNode[0]));
+                        break;
+                    } else if (nextNode[1] === '0') {
+                        resolve(nextNode);
+                        break;
+                    } else {
+                        this.router.updateContract(+nextNode[2], nextNode[3]);
+                        poolCodeLength = +nextNode[1];
+                    }
 
-                    resolve(result);
-                } else {
-                    reject(new Error('rootRouter is null.'));
+                    ++count;
+                    if (count > 10) {
+                        reject(new Error('Routing depth exceeded.'));
+                    }
                 }
             } catch (error) {
                 reject(error);

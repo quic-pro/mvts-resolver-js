@@ -1,13 +1,17 @@
 import {Contract} from '@ethersproject/contracts';
-import {EtherscanProvider} from '@ethersproject/providers';
+import {JsonRpcProvider} from '@ethersproject/providers';
 import {BigNumber} from '@ethersproject/bignumber';
 
-import {ABI} from '../constants/router';
+import {DEFAULT_ABI} from '../constants/router';
+import getRpc from '../utils/getRpc';
 
 
 export default class Router {
-    constructor(chainId: number, address: string) {
-        this.contract = new Contract(address, ABI, new EtherscanProvider(chainId));
+    constructor(abi?: any) {
+        this.contract = new Contract(
+            '0x0000000000000000000000000000000000000000',
+            abi ?? DEFAULT_ABI
+        );
     }
 
 
@@ -16,19 +20,18 @@ export default class Router {
     private contract: Contract;
 
 
-
     // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
 
     public updateContract(chainId: number, address: string): void {
-        this.contract = new Contract(address, ABI, new EtherscanProvider(chainId));
+        this.contract = new Contract(address, this.contract.interface, new JsonRpcProvider(getRpc(chainId)));
     }
 
     public getNextNode(code: number): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const rootRouter = await this.contract['getNextNode'](BigNumber.from(code));
+                const rootRouter = (await this.contract['getNextNode'](BigNumber.from(code))) as string[];
                 resolve(rootRouter);
-            } catch(error) {
+            } catch (error) {
                 reject(error);
             }
         });

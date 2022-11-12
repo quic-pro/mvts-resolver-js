@@ -1,31 +1,34 @@
 import {Contract} from '@ethersproject/contracts';
 import {EtherscanProvider} from '@ethersproject/providers';
 
-import {ADDRESS, ABI, CHAIN_ID} from '../constants/curator';
+import {DEFAULT_ADDRESS, DEFAULT_ABI, DEFAULT_CHAIN_ID} from '../constants/curator';
 
-import {Router} from '../types';
+import {ContractConfig, RootRouterData} from './types';
 
 
 export default class Curator {
-    constructor() {
-        this.contract = new Contract(ADDRESS, ABI, new EtherscanProvider(CHAIN_ID));
+    constructor(config?: Partial<ContractConfig>) {
+        this.contract = new Contract(
+            config?.address ?? DEFAULT_ADDRESS,
+            config?.abi ?? DEFAULT_ABI,
+            new EtherscanProvider(config?.chainId ?? DEFAULT_CHAIN_ID) // TODO: Replace EtherscanProvider to JsonRpcProvider
+        );
     }
 
 
-    // --- [ PRIVATE PROPERTIES ] -------------------------------------------------------------------------------------
+    // --- [ PRIVATE PROPERTIES ] --------------------------------------------------------------------------------------
 
     private readonly contract: Contract;
 
 
+    // --- [ PUBLIC METHODS ] ------------------------------------------------------------------------------------------
 
-    // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
-
-    public rootRouter(): Promise<Router> {
+    public rootRouter(): Promise<RootRouterData> {
         return new Promise(async (resolve, reject) => {
             try {
-                const rootRouter = await this.contract['rootRouter']();
+                const rootRouter = (await this.contract['rootRouter']()) as RootRouterData;
                 resolve(rootRouter);
-            } catch(error) {
+            } catch (error) {
                 reject(error);
             }
         });

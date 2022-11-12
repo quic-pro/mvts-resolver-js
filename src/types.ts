@@ -1,8 +1,8 @@
-import {BigNumber} from '@ethersproject/bignumber';
+import {ContractConfig} from './contracts/types';
 
 
-export type Router = {
-    ttl: BigNumber;
-    chainId: BigNumber;
-    adr: string;
+export type ResolverConfig = {
+    curatorConfig?: Partial<ContractConfig>;
+    rootRouterAbi?: any;
+    routerAbi?: any;
 };
