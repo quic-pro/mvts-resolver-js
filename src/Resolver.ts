@@ -63,14 +63,18 @@ export default class Resolver {
 
                 let poolCodeLength = 3;
                 let cache = this.cache;
+                let nextNode: string[] = [];
                 while (true) {
                     const code = +numbers.splice(0, poolCodeLength).join('');
 
-                    let nextNode: string[] = [];
                     if (cache[code] && (Date.now() < cache[code].expirationTime)) {
                         nextNode = cache[code].node;
                     } else {
                         const node: RootRouter | Router = (cache == this.cache ? this.rootRouter : this.router);
+                        if (node != this.rootRouter) {
+                            this.router.updateContract(+nextNode[2], nextNode[3]);
+                        }
+
                         nextNode = await this.getNextNode(node, code);
                         cache[code] = {
                             node: nextNode,
@@ -86,7 +90,6 @@ export default class Resolver {
                         resolve(nextNode);
                         break;
                     } else {
-                        this.router.updateContract(+nextNode[2], nextNode[3]);
                         poolCodeLength = +nextNode[1];
                     }
 
