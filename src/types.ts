@@ -1,8 +1,9 @@
-import {ContractConfig} from './contracts/types';
+import {CuratorConfig} from './contracts/Curator/types';
 
 
 export type ResolverConfig = {
-    curatorConfig?: Partial<ContractConfig>;
-    rootRouterAbi?: any;
-    routerAbi?: any;
+    curatorConfig?: CuratorConfig;
+    rpcUrls?: {
+        [key: number]: string;
+    };
 };

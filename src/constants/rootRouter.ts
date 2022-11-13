@@ -1,1 +1,1 @@
-export {abi as DEFAULT_ABI} from '../abis/RootRouter.json';
+export const POOL_CODE_LENGTH = 3;

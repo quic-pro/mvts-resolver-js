@@ -1,18 +1,25 @@
 import {Contract} from '@ethersproject/contracts';
-import {EtherscanProvider} from '@ethersproject/providers';
+import {JsonRpcProvider} from '@ethersproject/providers';
 
-import {DEFAULT_ADDRESS, DEFAULT_ABI, DEFAULT_CHAIN_ID} from '../constants/curator';
+import {DEFAULT_ADDRESS, ABI, DEFAULT_CHAIN_ID} from '../../constants/curator';
+import {DEFAULT_RPC_URLS} from '../../constants/rpc';
 
-import {ContractConfig, RootRouterData} from './types';
+import {CuratorConfig, RootRouterData} from './types';
+
+
+const DefaultConfig: CuratorConfig = {
+    chainId: DEFAULT_CHAIN_ID,
+    address: DEFAULT_ADDRESS
+};
 
 
 export default class Curator {
-    constructor(config?: Partial<ContractConfig>) {
-        this.contract = new Contract(
-            config?.address ?? DEFAULT_ADDRESS,
-            config?.abi ?? DEFAULT_ABI,
-            new EtherscanProvider(config?.chainId ?? DEFAULT_CHAIN_ID) // TODO: Replace EtherscanProvider to JsonRpcProvider
-        );
+    constructor(config = DefaultConfig, rpcUrls = DEFAULT_RPC_URLS) {
+        if (!rpcUrls[config.chainId]) {
+            throw new Error(`Chain ${config.chainId} not supported`);
+        }
+
+        this.contract = new Contract(config.address, ABI, new JsonRpcProvider(rpcUrls[config.chainId]));
     }
 
 

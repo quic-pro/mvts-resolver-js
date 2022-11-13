@@ -1,10 +1,9 @@
 import {BigNumber} from '@ethersproject/bignumber';
 
 
-export type ContractConfig = {
-    address: string;
+export type CuratorConfig = {
     chainId: number;
-    abi: any;
+    address: string;
 };
 
 export type RootRouterData = {
