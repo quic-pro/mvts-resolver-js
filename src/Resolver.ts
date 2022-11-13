@@ -2,6 +2,12 @@ import {Curator, RootRouter, Router} from './contracts';
 
 import {ResolverConfig} from './types';
 
+type CodeCache = {
+    node: string[];
+    expirationTime: number;
+    cache: CodeCache[];
+};
+
 
 export default class Resolver {
     constructor(config?: ResolverConfig) {
@@ -9,6 +15,7 @@ export default class Resolver {
         this.rootRouter = new RootRouter(config?.rootRouterAbi);
         this.router = new Router(config?.routerAbi);
         this.expirationTimeRootRouter = 0;
+        this.cache = [];
     }
 
 
@@ -18,6 +25,7 @@ export default class Resolver {
     private readonly rootRouter: RootRouter;
     private readonly router: Router;
     private expirationTimeRootRouter: number;
+    private cache: CodeCache[];
 
 
     // --- [ PRIVATE METHODS ] ----------------------------------------------------------------------------------------
@@ -46,18 +54,30 @@ export default class Resolver {
 
     // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
 
-    public async getAddress(phoneNumber: string): Promise<any> {
+    public async getAddress(phoneNumber: string): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             const numbers = phoneNumber.split('');
 
             try {
                 await this.updateRootRouter();
 
-                let count = 0, poolCodeLength = 3;
+                let poolCodeLength = 3;
+                let cache = this.cache;
                 while (true) {
                     const code = +numbers.splice(0, poolCodeLength).join('');
-                    const node: RootRouter | Router = count == 0 ? this.rootRouter : this.router;
-                    const nextNode = await this.getNextNode(node, code);
+
+                    let nextNode: string[] = [];
+                    if (cache[code] && (Date.now() < cache[code].expirationTime)) {
+                        nextNode = cache[code].node;
+                    } else {
+                        const node: RootRouter | Router = (cache == this.cache ? this.rootRouter : this.router);
+                        nextNode = await this.getNextNode(node, code);
+                        cache[code] = {
+                            node: nextNode,
+                            cache: [],
+                            expirationTime: Date.now() + (+nextNode[4] * 1000)
+                        };
+                    }
 
                     if (nextNode[0] !== '200') {
                         reject(new Error(nextNode[0]));
@@ -70,10 +90,7 @@ export default class Resolver {
                         poolCodeLength = +nextNode[1];
                     }
 
-                    ++count;
-                    if (count > 10) {
-                        reject(new Error('Routing depth exceeded.'));
-                    }
+                    cache = cache[code].cache;
                 }
             } catch (error) {
                 reject(error);
