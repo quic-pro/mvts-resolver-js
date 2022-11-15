@@ -3,6 +3,9 @@ import Resolver from './Resolver';
 
 const resolver = new Resolver();
 
+
+
+
 function test(name: string, number: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const startTime = Date.now();
@@ -17,11 +20,11 @@ function test(name: string, number: string): Promise<void> {
 }
 
 
-test('0% cache', '102777')
+test('0% cache', '400100')
     .then(() => {
-        test('100% cache', '102777')
+        test('100% cache', '400100')
             .then(() => {
-                return test('50% cache', '102111');
+                return test('50% cache', '400200');
             })
             .catch(console.error);
     })

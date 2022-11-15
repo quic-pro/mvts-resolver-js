@@ -12,7 +12,7 @@
     /*** Emit *********************************************************************************************************/
     "declaration": true,
     "emitDeclarationOnly": false,
-    "outDir": "./lib",
+    "outDir": "./dist",
     "removeComments": false,
     /*** Interop Constraints ******************************************************************************************/
     "allowSyntheticDefaultImports": true,

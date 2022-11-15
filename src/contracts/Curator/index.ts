@@ -4,7 +4,7 @@ import {JsonRpcProvider} from '@ethersproject/providers';
 import {DEFAULT_ADDRESS, ABI, DEFAULT_CHAIN_ID} from '../../constants/curator';
 import {DEFAULT_RPC_URLS} from '../../constants/rpc';
 
-import {CuratorConfig, RootRouterData} from './types';
+import {CuratorConfig} from './types';
 
 
 const DefaultConfig: CuratorConfig = {
@@ -30,11 +30,10 @@ export default class Curator {
 
     // --- [ PUBLIC METHODS ] ------------------------------------------------------------------------------------------
 
-    public rootRouter(): Promise<RootRouterData> {
+    public getRootRouter(): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const rootRouter = (await this.contract['rootRouter']()) as RootRouterData;
-                resolve(rootRouter);
+                resolve(await this.contract['getRootRouter']());
             } catch (error) {
                 reject(error);
             }

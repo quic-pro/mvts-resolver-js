@@ -1,7 +1,6 @@
 import {Curator, Router} from './contracts';
 
 import {ResolverConfig} from './types';
-import {RootRouterData} from './contracts/Curator/types';
 
 import {POOL_CODE_LENGTH} from './constants/rootRouter';
 
@@ -30,35 +29,29 @@ export default class Resolver {
     private readonly rootRouterCache: Map<number, RouterCache>;
 
     private expirationTimeRootRouter: number;
-    private rootRouterData: RootRouterData;
+    private rootRouterData: string[];
 
 
     // --- [ PRIVATE METHODS ] ----------------------------------------------------------------------------------------
 
     private getRootRouterData(): Promise<string[]> {
         if (Date.now() < this.expirationTimeRootRouter) {
-            return Promise.resolve([
-                '200',
-                POOL_CODE_LENGTH.toString(),
-                this.rootRouterData.chainId.toString(),
-                this.rootRouterData.adr,
-                this.rootRouterData.ttl.toString()
-            ]);
+            return Promise.resolve(this.rootRouterData);
         }
 
         return new Promise((resolve, reject) => {
-            this.curator.rootRouter()
+            this.curator.getRootRouter()
                 .then((rootRouterData) => {
                     // TODO: Check if RootRouter is null
-                    this.expirationTimeRootRouter = Date.now() + rootRouterData.ttl.toNumber() * 1000;
+                    this.expirationTimeRootRouter = Date.now() + +rootRouterData[4] * 1000;
                     this.rootRouterData = rootRouterData;
-                    resolve([
-                        '200',
-                        POOL_CODE_LENGTH.toString(),
-                        this.rootRouterData.chainId.toString(),
-                        this.rootRouterData.adr,
-                        this.rootRouterData.ttl.toString()
-                    ]);
+                    // TODO: Rest cache if root router is changed
+                    //this.rootRouterCache = new Map<number, RouterCache>();
+                    if (rootRouterData[0] === '200') {
+                        resolve(rootRouterData);
+                    } else {
+                        reject(rootRouterData[0]);
+                    }
                 })
                 .catch(reject);
         });
@@ -107,6 +100,8 @@ export default class Resolver {
                     }
 
                     poolCodeLength = +nextNodeData[1];
+                    // @ts-ignore
+                    routerCache = routerCache.get(code).cache;
                 }
             } catch (error) {
                 reject(error);

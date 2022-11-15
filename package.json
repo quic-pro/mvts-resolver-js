@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/quic-pro/mvts-client-js.git"
+    "url": "git+https://github.com/quic-pro/mvts-resolver-js.git"
   },
   "keywords": [
     "mvts"
