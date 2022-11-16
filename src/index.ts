@@ -1,31 +1,115 @@
-import Resolver from './Resolver';
+import {Curator, Router} from './contracts';
+
+import {ResolverConfig} from './types';
+
+import {POOL_CODE_LENGTH} from './constants/rootRouter';
 
 
-const resolver = new Resolver();
+type RouterCache = {
+    expirationTime: number;
+    nodeData: string[];
+    cache: Map<number, RouterCache>;
+};
 
 
+export default class Resolver {
+    constructor(config?: ResolverConfig) {
+        this.curator = new Curator(config?.curatorConfig, config?.rpcUrls);
+        this.router = new Router(config?.rpcUrls);
+        this.rootRouterCache = new Map<number, RouterCache>();
+
+        this.expirationTimeRootRouter = 0;
+    }
 
 
-function test(name: string, number: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const startTime = Date.now();
-        resolver.getAddress(number)
-            .then((node) => {
-                console.log(name, (Date.now() - startTime) / 1000);
-                console.log(node);
-                resolve();
-            })
-            .catch(reject);
-    });
+    // --- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
+
+    private readonly curator: Curator;
+    private readonly router: Router;
+    private readonly rootRouterCache: Map<number, RouterCache>;
+
+    private expirationTimeRootRouter: number;
+    private rootRouterData: string[];
+
+
+    // --- [ PRIVATE METHODS ] ----------------------------------------------------------------------------------------
+
+    private getRootRouterData(): Promise<string[]> {
+        if (Date.now() < this.expirationTimeRootRouter) {
+            if (this.rootRouterData[0] === '200') {
+                return Promise.resolve(this.rootRouterData);
+            } else {
+                return Promise.reject(this.rootRouterData);
+            }
+
+        }
+
+        return new Promise((resolve, reject) => {
+            this.curator.getRootRouter()
+                .then((rootRouterData) => {
+                    this.expirationTimeRootRouter = Date.now() + +rootRouterData[4] * 1000;
+                    this.rootRouterData = rootRouterData;
+                    this.rootRouterCache.clear();
+
+                    if (rootRouterData[0] === '200') {
+                        resolve(rootRouterData);
+                    } else {
+                        reject(rootRouterData[0]);
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+
+    // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
+
+    public getAddress(phoneNumber: string): Promise<string[]> {
+        return new Promise(async (resolve, reject) => {
+            const numbers = phoneNumber.split('');
+
+            try {
+                let routerCache = this.rootRouterCache;
+                let poolCodeLength = POOL_CODE_LENGTH;
+                let nextNodeData = await this.getRootRouterData();
+
+                while (numbers.length) {
+                    if (numbers.length < poolCodeLength) {
+                        throw new Error('Invalid phone number.');
+                    }
+
+                    const code = +numbers.splice(0, poolCodeLength).join('');
+                    const cachedNodeData = routerCache.get(code);
+
+                    if (cachedNodeData && (Date.now() < cachedNodeData.expirationTime)) {
+                        nextNodeData = cachedNodeData.nodeData;
+                    } else {
+                        this.router.updateContract(+nextNodeData[2], nextNodeData[3]);
+                        nextNodeData = await this.router.getNextNode(code);
+                        routerCache.set(code, {
+                            expirationTime: Date.now() + (+nextNodeData[4] * 1000),
+                            nodeData: nextNodeData,
+                            cache: new Map<number, RouterCache>()
+                        });
+                    }
+
+                    if (nextNodeData[0] !== '200') {
+                        reject(nextNodeData[0]);
+                    } else if (nextNodeData[1] === '0') {
+                        if (numbers.length === 0) {
+                            resolve(nextNodeData);
+                        } else {
+                            throw new Error('Invalid phone number.');
+                        }
+                    }
+
+                    poolCodeLength = +nextNodeData[1];
+                    // @ts-ignore
+                    routerCache = routerCache.get(code).cache;
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 }
-
-
-test('0% cache', '400100')
-    .then(() => {
-        test('100% cache', '400100')
-            .then(() => {
-                return test('50% cache', '400200');
-            })
-            .catch(console.error);
-    })
-    .catch(console.error);
