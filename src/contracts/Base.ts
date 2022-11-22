@@ -9,12 +9,12 @@ export default class Base {
     }
 
 
-    // --- [ PUBLIC PROPERTIES ] ---------------------------------------------------------------------------------------
+    // ----- [ PUBLIC PROPERTIES ] -------------------------------------------------------------------------------------
 
     public contract: Contract;
 
 
-    // --- [ PUBLIC METHODS ] -----------------------------------------------------------------------------------------
+    // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
 
     public updateContract(addressOrName?: string, signerOrProvider?: Signer | Provider): void {
         if (!addressOrName) {

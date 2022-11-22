@@ -15,11 +15,9 @@ type Options = {
     useOnlyCustomProviders?: boolean;
 };
 
-type ContractResponse = string[];
-
 type MethodCallCache = {
     expirationTime: number;
-    response: ContractResponse;
+    response: string[];
 };
 
 type CuratorCache = {
@@ -69,7 +67,7 @@ export default class Resolver {
     }
 
 
-    // --- [ PRIVATE PROPERTIES ] --------------------------------------------------------------------------------------
+    // ----- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
 
     private readonly providers: Map<number, Provider>;
     private readonly curator: Curator;
@@ -80,9 +78,9 @@ export default class Resolver {
     private router: Router | null;
 
 
-    // --- [ STATIC PRIVATE METHODS ] ----------------------------------------------------------------------------------
+    // ----- [ STATIC PRIVATE METHODS ] --------------------------------------------------------------------------------
 
-    private static responsesIdentical(a: ContractResponse, b: ContractResponse): boolean {
+    private static responsesIdentical(a: string[], b: string[]): boolean {
         if (a.length != b.length) {
             return false;
         }
@@ -96,10 +94,24 @@ export default class Resolver {
         return true;
     }
 
+    private static updateRouterCache(routerCache: RouterCache, code: number, response: string[]): void {
+        routerCache.getNextNode.set(code, {
+            expirationTime: Date.now() + Number(response[4]) * 1000,
+            response: response
+        });
 
-    // --- [ PRIVATE METHODS ] -----------------------------------------------------------------------------------------
+        if (response[1] !== '0') {
+            routerCache.childRouters.set(code, {
+                getNextNode: new Map<number, MethodCallCache>(),
+                childRouters: new Map<number, RouterCache>()
+            });
+        }
+    }
 
-    private getRootRouterData(): Promise<ContractResponse> {
+
+    // ----- [ PRIVATE METHODS ] ---------------------------------------------------------------------------------------
+
+    private getRootRouterData(): Promise<string[]> {
         const cache = this.curatorCache.getRootRouter;
         if ((Date.now() < cache.expirationTime) && (cache.response[0] === '200')) {
             return Promise.resolve(cache.response);
@@ -140,29 +152,15 @@ export default class Resolver {
         return this.router;
     }
 
-    private getNextNodeData(nodeData: ContractResponse, code: number): Promise<ContractResponse> {
+    private getNextNodeData(nodeData: string[], code: number): Promise<string[]> {
         const router = this.getRouter(Number(nodeData[2]), nodeData[3]);
         return router.getNextNode(BigNumber.from(code));
     }
 
-    private updateRouterCache(routerCache: RouterCache, code: number, response: ContractResponse): void {
-        routerCache.getNextNode.set(code, {
-            expirationTime: Date.now() + Number(response[4]) * 1000,
-            response: response
-        });
 
-        if (response[1] !== '0') {
-            routerCache.childRouters.set(code, {
-                getNextNode: new Map<number, MethodCallCache>(),
-                childRouters: new Map<number, RouterCache>()
-            });
-        }
-    }
+    // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
 
-
-    // --- [ PUBLIC METHODS ] ------------------------------------------------------------------------------------------
-
-    public getAddress(phoneNumber: string): Promise<ContractResponse> {
+    public getAddress(phoneNumber: string): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             let nodeData = await this.getRootRouterData();
             let routerCache = this.rootRouterCache;
@@ -180,7 +178,7 @@ export default class Resolver {
                     nodeData = callCache.response;
                 } else {
                     nodeData = await this.getNextNodeData(nodeData, code);
-                    this.updateRouterCache(routerCache, code, nodeData);
+                    Resolver.updateRouterCache(routerCache, code, nodeData);
                 }
 
                 if (nodeData[0] !== '200') {

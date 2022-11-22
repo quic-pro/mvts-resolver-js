@@ -13,15 +13,9 @@ export default class Router extends Base {
     }
 
 
-    // --- [ PUBLIC METHODS ] ------------------------------------------------------------------------------------------
+    // ----- [ ROUTING ] -----------------------------------------------------------------------------------------------
 
     public getNextNode(code: BigNumber): Promise<string[]> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                resolve(await this.contract['getNextNode'](code));
-            } catch (error) {
-                reject(error);
-            }
-        });
+        return this.contract['getNextNode'](code);
     }
 }

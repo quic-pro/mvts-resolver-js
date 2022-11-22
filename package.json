@@ -26,8 +26,8 @@
     "@ethersproject/providers": "^5.7.2"
   },
   "devDependencies": {
-    "@types/node": "^18.11.3",
-    "typescript": "^4.8.4"
+    "@types/node": "^18.11.9",
+    "typescript": "^4.9.3"
   },
   "bugs": {
     "url": "https://github.com/quic-pro/mvts-resolver-js/issues"
