@@ -52,6 +52,11 @@ type NumberStatus = {
     holdingEndTime: BigNumber; // 5
 };
 
+type PayableOptions = {
+    value: BigNumber;
+    gasLimit: number;
+};
+
 
 export default class RootRouter extends Base {
     constructor(addressOrName: string, signerOrProvider: Signer | Provider) {
@@ -213,12 +218,12 @@ export default class RootRouter extends Base {
 
     // ----- [ CUSTOMER NUMBER MANAGEMENT ] ----------------------------------------------------------------------------
 
-    public buy(code: BigNumber): Promise<void> {
-        return this.contract['buy'](code);
+    public buy(code: BigNumber, options: PayableOptions): Promise<void> {
+        return this.contract['buy'](code, options);
     }
 
-    public renewSubscription(code: BigNumber): Promise<string[]> {
-        return this.contract['renewSubscription'](code);
+    public renewSubscription(code: BigNumber, options: PayableOptions): Promise<string[]> {
+        return this.contract['renewSubscription'](code, options);
     }
 
     public transferOwnershipOfCustomerNumber(code: BigNumber, newOwner: string): Promise<string[]> {
