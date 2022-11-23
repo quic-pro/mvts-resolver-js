@@ -119,11 +119,11 @@ class RootRouter extends Base_1.default {
         return this.contract['setExpirationTime'](code, newExpirationTime);
     }
     // ----- [ CUSTOMER NUMBER MANAGEMENT ] ----------------------------------------------------------------------------
-    buy(code) {
-        return this.contract['buy'](code);
+    buy(code, options) {
+        return this.contract['buy'](code, options);
     }
-    renewSubscription(code) {
-        return this.contract['renewSubscription'](code);
+    renewSubscription(code, options) {
+        return this.contract['renewSubscription'](code, options);
     }
     transferOwnershipOfCustomerNumber(code, newOwner) {
         return this.contract['transferOwnershipOfCustomerNumber'](code, newOwner);

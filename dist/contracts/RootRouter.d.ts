@@ -43,6 +43,10 @@ type NumberStatus = {
     subscriptionEndTime: BigNumber;
     holdingEndTime: BigNumber;
 };
+type PayableOptions = {
+    value: BigNumber;
+    gasLimit: number;
+};
 export default class RootRouter extends Base {
     constructor(addressOrName: string, signerOrProvider: Signer | Provider);
     POOL_SIZE(): Promise<BigNumber>;
@@ -80,8 +84,8 @@ export default class RootRouter extends Base {
     takeAwayOwnership(code: BigNumber): Promise<void>;
     setBlockedStatus(code: BigNumber, newBlockedStatus: boolean): Promise<void>;
     setExpirationTime(code: BigNumber, newExpirationTime: BigNumber): Promise<void>;
-    buy(code: BigNumber): Promise<void>;
-    renewSubscription(code: BigNumber): Promise<string[]>;
+    buy(code: BigNumber, options: PayableOptions): Promise<void>;
+    renewSubscription(code: BigNumber, options: PayableOptions): Promise<string[]>;
     transferOwnershipOfCustomerNumber(code: BigNumber, newOwner: string): Promise<string[]>;
     renounceOwnershipOfCustomerNumber(code: BigNumber): Promise<string[]>;
     changeCustomerNumberMode(code: BigNumber): Promise<string[]>;
