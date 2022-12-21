@@ -25,11 +25,11 @@ class Resolver {
             entries.forEach(([chainId, provider]) => this.providers.set(Number(chainId), provider));
         }
         if (!curator) {
-            const provider = this.providers.get(constants_1.DEFAULT_CURATOR_CHAIN_ID);
+            const provider = this.providers.get(constants_1.ACTUAL_CURATOR_CHAIN_ID);
             if (!provider) {
-                throw new Error(`Chain ${constants_1.DEFAULT_CURATOR_CHAIN_ID} not supported: provider is missing.`);
+                throw new Error(`Chain ${constants_1.ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
             }
-            curator = new contracts_1.Curator(constants_1.DEFAULT_CURATOR_ADDRESS, provider);
+            curator = new contracts_1.Curator(constants_1.ACTUAL_CURATOR_ADDRESS, provider);
         }
         this.curator = curator;
         this.router = null;
@@ -96,7 +96,7 @@ class Resolver {
     getRouter(chainId, address) {
         const provider = this.providers.get(chainId);
         if (!provider) {
-            throw new Error(`Chain ${constants_1.DEFAULT_CURATOR_CHAIN_ID} not supported: provider is missing.`);
+            throw new Error(`Chain ${constants_1.ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
         }
         if (!this.router) {
             this.router = new contracts_1.Router(address, provider);
@@ -111,7 +111,7 @@ class Resolver {
         return router.getNextNode(bignumber_1.BigNumber.from(code));
     }
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
-    getAddress(phoneNumber) {
+    getPhoneNumberData(phoneNumber) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let nodeData = yield this.getRootRouterData();
             let routerCache = this.rootRouterCache;

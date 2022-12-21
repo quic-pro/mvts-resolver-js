@@ -5,7 +5,7 @@ import {BigNumber} from '@ethersproject/bignumber';
 import {Curator, Router} from './contracts';
 
 
-import {DEFAULT_CURATOR_ADDRESS, DEFAULT_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
+import {ACTUAL_CURATOR_ADDRESS, ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
 
 
 type Options = {
@@ -43,11 +43,11 @@ export default class Resolver {
         }
 
         if (!curator) {
-            const provider = this.providers.get(DEFAULT_CURATOR_CHAIN_ID);
+            const provider = this.providers.get(ACTUAL_CURATOR_CHAIN_ID);
             if (!provider) {
-                throw new Error(`Chain ${DEFAULT_CURATOR_CHAIN_ID} not supported: provider is missing.`);
+                throw new Error(`Chain ${ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
             }
-            curator = new Curator(DEFAULT_CURATOR_ADDRESS, provider);
+            curator = new Curator(ACTUAL_CURATOR_ADDRESS, provider);
         }
         this.curator = curator;
 
@@ -140,7 +140,7 @@ export default class Resolver {
     private getRouter(chainId: number, address: string): Router {
         const provider = this.providers.get(chainId);
         if (!provider) {
-            throw new Error(`Chain ${DEFAULT_CURATOR_CHAIN_ID} not supported: provider is missing.`);
+            throw new Error(`Chain ${ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
         }
 
         if (!this.router) {
@@ -160,7 +160,7 @@ export default class Resolver {
 
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
 
-    public getAddress(phoneNumber: string): Promise<string[]> {
+    public getPhoneNumberData(phoneNumber: string): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             let nodeData = await this.getRootRouterData();
             let routerCache = this.rootRouterCache;

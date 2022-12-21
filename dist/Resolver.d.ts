@@ -18,6 +18,6 @@ export default class Resolver {
     private getRootRouterData;
     private getRouter;
     private getNextNodeData;
-    getAddress(phoneNumber: string): Promise<string[]>;
+    getPhoneNumberData(phoneNumber: string): Promise<string[]>;
 }
 export {};
