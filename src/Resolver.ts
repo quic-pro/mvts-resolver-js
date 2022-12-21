@@ -119,18 +119,18 @@ export default class Resolver {
 
         return new Promise((resolve, reject) => {
             this.curator.getRootRouter()
-                .then((response) => {
-                    cache.expirationTime = Date.now() + Number(response[4]) * 1000;
-                    if (!Resolver.responsesIdentical(cache.response, response)) {
+                .then((rootRouterData) => {
+                    cache.expirationTime = Date.now() + Number(rootRouterData[4]) * 1000;
+                    if (!Resolver.responsesIdentical(cache.response, rootRouterData)) {
                         this.rootRouterCache.getNextNode.clear();
                         this.rootRouterCache.childRouters.clear();
-                        cache.response = response;
+                        cache.response = rootRouterData;
                     }
 
-                    if (response[0] === '200') {
-                        resolve(response);
+                    if (rootRouterData[0] === '200') {
+                        resolve(rootRouterData);
                     } else {
-                        reject(response);
+                        reject(rootRouterData);
                     }
                 })
                 .catch(reject);

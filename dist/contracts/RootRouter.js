@@ -5,16 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const RootRouter_json_1 = __importDefault(require("../abis/RootRouter.json"));
 const Base_1 = __importDefault(require("./Base"));
+var CodeMode;
+(function (CodeMode) {
+    CodeMode[CodeMode["Number"] = 0] = "Number";
+    CodeMode[CodeMode["Pool"] = 1] = "Pool";
+})(CodeMode || (CodeMode = {}));
 class RootRouter extends Base_1.default {
     constructor(addressOrName, signerOrProvider) {
         super(addressOrName, RootRouter_json_1.default, signerOrProvider);
     }
     // ----- [ SETTINGS ] ----------------------------------------------------------------------------------------------
-    POOL_SIZE() {
-        return this.contract['POOL_SIZE']();
-    }
-    buyPrice() {
-        return this.contract['buyPrice']();
+    mintPrice() {
+        return this.contract['mintPrice']();
     }
     subscriptionPrice() {
         return this.contract['subscriptionPrice']();
@@ -25,34 +27,55 @@ class RootRouter extends Base_1.default {
     subscriptionDuration() {
         return this.contract['subscriptionDuration']();
     }
-    numberFreezeDuration() {
-        return this.contract['numberFreezeDuration']();
+    holdingDuration() {
+        return this.contract['holdingDuration']();
     }
     ttl() {
         return this.contract['ttl']();
+    }
+    baseUri() {
+        return this.contract['baseUri']();
     }
     defaultSipDomain() {
         return this.contract['defaultSipDomain']();
     }
     // ----- [ DATA ] --------------------------------------------------------------------------------------------------
-    pool(code) {
-        return this.contract['pool'](code);
+    owner() {
+        return this.contract['owner']();
+    }
+    name() {
+        return this.contract['name']();
+    }
+    symbol() {
+        return this.contract['symbol']();
+    }
+    POOL_SIZE() {
+        return this.contract['POOL_SIZE']();
     }
     // ----- [ PUBLIC UTILS ] ------------------------------------------------------------------------------------------
-    getTimestamp() {
-        return this.contract['getTimestamp']();
+    supportsInterface(interfaceId) {
+        return this.contract['supportsInterface'](interfaceId);
     }
-    isValidNumber(code) {
-        return this.contract['isValidNumber'](code);
+    tokenURI(tokenId) {
+        return this.contract['tokenURI'](tokenId);
     }
-    isNumberOwner(code, adr) {
-        return this.contract['isNumberOwner'](code, adr);
+    balanceOf(owner) {
+        return this.contract['balanceOf'](owner);
+    }
+    ownerOf(tokenId) {
+        return this.contract['ownerOf'](tokenId);
+    }
+    hasOwner(code) {
+        return this.contract['hasOwner'](code);
+    }
+    getCodeData(code) {
+        return this.contract['getCodeData'](code);
     }
     isBlocked(code) {
         return this.contract['isBlocked'](code);
     }
-    isHolded(code) {
-        return this.contract['isHolded'](code);
+    isHeld(code) {
+        return this.contract['isHeld'](code);
     }
     isAvailableForBuy(code) {
         return this.contract['isAvailableForBuy'](code);
@@ -66,30 +89,30 @@ class RootRouter extends Base_1.default {
     getMode(code) {
         return this.contract['getMode'](code);
     }
-    getNumberStatus(code) {
-        return this.contract['getNumberStatus'](code);
+    getCodeStatus(code) {
+        return this.contract['getCodeStatus'](code);
     }
-    getAvailableNumbers() {
-        return this.contract['getBlockedNumbers']();
+    getBlockedCodes() {
+        return this.contract['getBlockedCodes']();
     }
-    getHoldedNumbers() {
-        return this.contract['getHoldedNumbers']();
+    getHeldCodes() {
+        return this.contract['getHeldCodes']();
     }
-    getAvailableForBuyNumbers() {
-        return this.contract['getAvailableForBuyNumbers']();
+    getAvailableForMintCodes() {
+        return this.contract['getAvailableForMintCodes']();
     }
-    getNumberPools() {
-        return this.contract['getNumberPools']();
+    getPoolCodes() {
+        return this.contract['getPoolCodes']();
     }
-    getAddressNumbers(adr) {
-        return this.contract['getAddressNumbers'](adr);
+    getOwnerCodes(adr) {
+        return this.contract['getOwnerCodes'](adr);
     }
     // ----- [ SMART CONTRACT MANAGEMENT ] -----------------------------------------------------------------------------
     withdraw() {
         return this.contract['withdraw']();
     }
-    setBuyPrice(newBuyPrice) {
-        return this.contract['setBuyPrice'](newBuyPrice);
+    setMintPrice(newMintPrice) {
+        return this.contract['setMintPrice'](newMintPrice);
     }
     setSubscriptionPrice(newSubscriptionPrice) {
         return this.contract['setSubscriptionPrice'](newSubscriptionPrice);
@@ -100,8 +123,8 @@ class RootRouter extends Base_1.default {
     setSubscriptionDuration(newSubscriptionDuration) {
         return this.contract['setSubscriptionDuration'](newSubscriptionDuration);
     }
-    setNumberFreezeDuration(newNumberFreezeDuration) {
-        return this.contract['setNumberFreezeDuration'](newNumberFreezeDuration);
+    setHoldingDuration(newHoldingDuration) {
+        return this.contract['setHoldingDuration'](newHoldingDuration);
     }
     setTtl(newTtl) {
         return this.contract['setTtl'](newTtl);
@@ -109,42 +132,60 @@ class RootRouter extends Base_1.default {
     setDefaultSipDomain(newDefaultSipDomain) {
         return this.contract['setDefaultSipDomain'](newDefaultSipDomain);
     }
-    takeAwayOwnership(code) {
-        return this.contract['takeAwayOwnership'](code);
+    setBaseUri(newBaseUri) {
+        return this.contract['setBaseUri'](newBaseUri);
     }
-    setBlockedStatus(code, newBlockedStatus) {
-        return this.contract['setBlockedStatus'](code, newBlockedStatus);
+    setCodeBlockedStatus(code, newBlockedStatus) {
+        return this.contract['setCodeBlockedStatus'](code, newBlockedStatus);
     }
-    setExpirationTime(code, newExpirationTime) {
-        return this.contract['setExpirationTime'](code, newExpirationTime);
+    setCodeSubscriptionEndTime(code, newSubscriptionEndTime) {
+        return this.contract['setCodeSubscriptionEndTime'](code, newSubscriptionEndTime);
     }
-    // ----- [ CUSTOMER NUMBER MANAGEMENT ] ----------------------------------------------------------------------------
-    buy(code, options) {
-        return this.contract['buy'](code, options);
+    // ----- [ CODE MANAGEMENT ] ---------------------------------------------------------------------------------------
+    safeTransferFrom(from, to, tokenId, data) {
+        return this.contract['safeTransferFrom'](from, to, tokenId, data);
+    }
+    transferFrom(from, to, tokenId) {
+        return this.contract['transferFrom'](from, to, tokenId);
+    }
+    approve(to, tokenId) {
+        return this.contract['approve'](to, tokenId);
+    }
+    setApprovalForAll(operator, approved) {
+        return this.contract['setApprovalForAll'](operator, approved);
+    }
+    getApproved(tokenId) {
+        return this.contract['getApproved'](tokenId);
+    }
+    isApprovedForAll(owner, operator) {
+        return this.contract['isApprovedForAll'](owner, operator);
+    }
+    mint(code, options) {
+        return this.contract['mint'](code, options);
     }
     renewSubscription(code, options) {
         return this.contract['renewSubscription'](code, options);
     }
-    transferOwnershipOfCustomerNumber(code, newOwner) {
-        return this.contract['transferOwnershipOfCustomerNumber'](code, newOwner);
+    transferOwnershipOfCode(code, newOwner) {
+        return this.contract['transferOwnershipOfCode'](code, newOwner);
     }
-    renounceOwnershipOfCustomerNumber(code) {
-        return this.contract['renounceOwnershipOfCustomerNumber'](code);
+    renounceOwnershipOfCode(code) {
+        return this.contract['renounceOwnershipOfCode'](code);
     }
-    changeCustomerNumberMode(code) {
-        return this.contract['changeCustomerNumberMode'](code);
+    changeCodeMode(code) {
+        return this.contract['changeCodeMode'](code);
     }
-    setCustomerNumberSipDomain(code, newSipDomain) {
-        return this.contract['setCustomerNumberSipDomain'](code, newSipDomain);
+    setCodeSipDomain(code, newSipDomain) {
+        return this.contract['setCodeSipDomain'](code, newSipDomain);
     }
-    clearCustomerNumberSipDomain(code) {
-        return this.contract['clearCustomerNumberSipDomain'](code);
+    clearCodeSipDomain(code) {
+        return this.contract['clearCodeSipDomain'](code);
     }
-    setCustomerNumberRouter(code, newChainId, newAddress, newPoolCodeLength) {
-        return this.contract['setCustomerNumberRouter'](code, newChainId, newAddress, newPoolCodeLength);
+    setCodeRouter(code, newChainId, newAdr, newPoolCodeLength) {
+        return this.contract['setCodeRouter'](code, newChainId, newAdr, newPoolCodeLength);
     }
-    clearCustomerNumberRouter(code) {
-        return this.contract['clearCustomerNumberRouter'](code);
+    clearCodeRouter(code) {
+        return this.contract['clearCodeRouter'](code);
     }
     // ----- [ ROUTING ] -----------------------------------------------------------------------------------------------
     getNextNode(code) {

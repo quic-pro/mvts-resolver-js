@@ -1,3 +1,5 @@
-export * from './constants';
-export * from './contracts';
-export {default as Resolver} from './Resolver';
+export default './Resolver';
+
+export * as constants from './constants';
+export * as contracts from './contracts';
+export * as utils from './utils';

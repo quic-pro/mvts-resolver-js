@@ -27,8 +27,8 @@ class Curator extends Base_1.default {
     setTtl(newTtl) {
         return this.contract['setTtl'](newTtl);
     }
-    setRootRouter(newChainId, newAddress) {
-        return this.contract['setRootRouter'](newChainId, newAddress);
+    setRootRouter(newChainId, newAdr) {
+        return this.contract['setRootRouter'](newChainId, newAdr);
     }
     cleanRootRouter() {
         return this.contract['cleanRootRouter']();

@@ -2,9 +2,11 @@ import {Contract, ContractInterface} from '@ethersproject/contracts';
 import {Signer} from '@ethersproject/abstract-signer';
 import {Provider} from '@ethersproject/abstract-provider';
 
+import {address} from './types';
+
 
 export default class Base {
-    constructor(addressOrName: string, contractInterface: ContractInterface, signerOrProvider: Signer | Provider) {
+    constructor(addressOrName: address | string, contractInterface: ContractInterface, signerOrProvider: Signer | Provider) {
         this.contract = new Contract(addressOrName, contractInterface, signerOrProvider);
     }
 
