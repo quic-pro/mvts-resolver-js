@@ -239,7 +239,7 @@ export default class RootRouter extends Base {
     // ----- [ CODE MANAGEMENT ] ---------------------------------------------------------------------------------------
 
     public safeTransferFrom(from: address, to: address, tokenId: uint256, data?: bytes): Promise<void> {
-        return this.contract['safeTransferFrom'](from, to, tokenId, data);
+        return this.contract['safeTransferFrom(address,address,uint256,bytes)'](from, to, tokenId, data);
     }
 
     public transferFrom(from: address, to: address, tokenId: uint256): Promise<void> {
