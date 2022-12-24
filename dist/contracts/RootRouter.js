@@ -143,7 +143,7 @@ class RootRouter extends Base_1.default {
     }
     // ----- [ CODE MANAGEMENT ] ---------------------------------------------------------------------------------------
     safeTransferFrom(from, to, tokenId, data) {
-        return this.contract['safeTransferFrom'](from, to, tokenId, data);
+        return this.contract['safeTransferFrom(address,address,uint256,bytes)'](from, to, tokenId, data);
     }
     transferFrom(from, to, tokenId) {
         return this.contract['transferFrom'](from, to, tokenId);

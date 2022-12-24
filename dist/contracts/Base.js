@@ -5,14 +5,15 @@ class Base {
     constructor(addressOrName, contractInterface, signerOrProvider) {
         this.contract = new contracts_1.Contract(addressOrName, contractInterface, signerOrProvider);
     }
+    // ----- [ PUBLIC PROPERTIES ] -------------------------------------------------------------------------------------
+    contract;
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
     updateContract(addressOrName, signerOrProvider) {
-        var _a;
         if (!addressOrName) {
             addressOrName = this.contract.address;
         }
         if (!signerOrProvider) {
-            signerOrProvider = (_a = this.contract.signer) !== null && _a !== void 0 ? _a : this.contract.provider;
+            signerOrProvider = this.contract.signer ?? this.contract.provider;
         }
         this.contract = new contracts_1.Contract(addressOrName, this.contract.interface, signerOrProvider);
     }
