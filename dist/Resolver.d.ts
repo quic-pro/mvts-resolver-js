@@ -1,23 +1,20 @@
-import { Provider } from '@ethersproject/abstract-provider';
-import { Curator } from './contracts';
-type Options = {
-    customProviders?: {
-        [chainId: number]: Provider;
+import { Provider } from '@ethersproject/providers';
+import { Curator } from '@mvts/contract-interfaces-js';
+export type ResolverOptions = {
+    curator?: Curator;
+    rpcUrlsAndProviders?: {
+        [chainId: number]: string | Provider;
     };
-    useOnlyCustomProviders?: boolean;
+    useDefaultRpcUrls?: boolean;
+    useCache?: boolean;
 };
-export default class Resolver {
-    constructor(curator?: Curator, options?: Options);
-    private readonly providers;
-    private readonly curator;
-    private readonly curatorCache;
-    private readonly rootRouterCache;
-    private router;
-    private static responsesIdentical;
-    private static updateRouterCache;
+export declare class Resolver {
+    constructor(options?: ResolverOptions);
+    private cache;
+    private useCache;
+    readonly providers: Map<number, Provider>;
+    readonly curator: Curator;
     private getRootRouterData;
     private getRouter;
-    private getNextNodeData;
-    getPhoneNumberData(phoneNumber: string): Promise<string[]>;
+    getSipUri(phoneNumber: string): Promise<string>;
 }
-export {};

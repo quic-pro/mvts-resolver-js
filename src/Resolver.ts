@@ -1,197 +1,146 @@
-import {Provider} from '@ethersproject/abstract-provider';
-import {JsonRpcProvider} from '@ethersproject/providers';
-import {BigNumber} from '@ethersproject/bignumber';
-
-import {Curator, Router} from './contracts';
+import {Provider, JsonRpcProvider} from '@ethersproject/providers';
+import {Curator, Router, Router__factory} from '@mvts/contract-interfaces-js';
 
 
-import {ACTUAL_CURATOR_ADDRESS, ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
+import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
+import {getActualCurator} from './utils';
+import {ResponseCode} from './types';
 
 
-type Options = {
-    customProviders?: {
-        [chainId: number]: Provider;
+export type ResolverOptions = {
+    curator?: Curator;
+    rpcUrlsAndProviders?: {
+        [chainId: number]: string | Provider;
     };
-    useOnlyCustomProviders?: boolean;
+    useDefaultRpcUrls?: boolean;
+    useCache?: boolean;
 };
 
-type MethodCallCache = {
+
+type Cache = {
     expirationTime: number;
-    response: string[];
+    nodeData: Router.NodeDataStructOutput;
+    codes: Map<number, Cache>;
 };
 
-type CuratorCache = {
-    getRootRouter: MethodCallCache;
-};
 
-type RouterCache = {
-    getNextNode: Map<number, MethodCallCache>;
-    childRouters: Map<number, RouterCache>
-}
-
-
-export default class Resolver {
-    constructor(curator?: Curator, options?: Options) {
+export class Resolver {
+    constructor(options: ResolverOptions = {}) {
         this.providers = new Map<number, Provider>();
-        if (!options || !options.useOnlyCustomProviders) {
+
+        if (options.useDefaultRpcUrls) {
             const entries = Object.entries(DEFAULT_RPC_URLS);
-            entries.forEach(([chainId, url]) => this.providers.set(Number(chainId), new JsonRpcProvider(url)));
+            entries.forEach(([chainId, rpcUrl]) => this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrl)));
         }
-        if (options && options.customProviders) {
-            const entries = Object.entries(options.customProviders);
-            entries.forEach(([chainId, provider]) => this.providers.set(Number(chainId), provider));
+        if (options.rpcUrlsAndProviders) {
+            const entries = Object.entries(options.rpcUrlsAndProviders);
+            entries.forEach(([chainId, rpcUrlOrProvider]) => {
+                if (typeof rpcUrlOrProvider === 'string') {
+                    this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrlOrProvider, chainId))
+                } else {
+                    this.providers.set(Number(chainId), rpcUrlOrProvider);
+                }
+            });
         }
 
-        if (!curator) {
-            const provider = this.providers.get(ACTUAL_CURATOR_CHAIN_ID);
-            if (!provider) {
-                throw new Error(`Chain ${ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
-            }
-            curator = new Curator(ACTUAL_CURATOR_ADDRESS, provider);
+        if (options.curator) {
+            this.curator = options.curator;
+        } else {
+            this.curator = getActualCurator(this.providers.get(ACTUAL_CURATOR_CHAIN_ID));
         }
-        this.curator = curator;
 
-        this.router = null;
-
-        this.curatorCache = {
-            getRootRouter: {
-                expirationTime: 0,
-                response: []
-            }
-        };
-
-        this.rootRouterCache = {
-            getNextNode: new Map<number, MethodCallCache>(),
-            childRouters: new Map<number, RouterCache>()
-        };
+        this.cache = null;
+        this.useCache = options.useCache ?? true;
     }
 
 
     // ----- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
 
-    private readonly providers: Map<number, Provider>;
-    private readonly curator: Curator;
-
-    private readonly curatorCache: CuratorCache;
-    private readonly rootRouterCache: RouterCache;
-
-    private router: Router | null;
+    private cache: Cache | null;
+    private useCache: boolean;
 
 
-    // ----- [ STATIC PRIVATE METHODS ] --------------------------------------------------------------------------------
+    // ----- [ PUBLIC PROPERTIES ] -------------------------------------------------------------------------------------
 
-    private static responsesIdentical(a: string[], b: string[]): boolean {
-        if (a.length != b.length) {
-            return false;
-        }
-
-        for (let i = 0; i < a.length; ++i) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static updateRouterCache(routerCache: RouterCache, code: number, response: string[]): void {
-        routerCache.getNextNode.set(code, {
-            expirationTime: Date.now() + Number(response[4]) * 1000,
-            response: response
-        });
-
-        if (response[1] !== '0') {
-            routerCache.childRouters.set(code, {
-                getNextNode: new Map<number, MethodCallCache>(),
-                childRouters: new Map<number, RouterCache>()
-            });
-        }
-    }
+    public readonly providers: Map<number, Provider>;
+    public readonly curator: Curator;
 
 
     // ----- [ PRIVATE METHODS ] ---------------------------------------------------------------------------------------
 
-    private getRootRouterData(): Promise<string[]> {
-        const cache = this.curatorCache.getRootRouter;
-        if ((Date.now() < cache.expirationTime) && (cache.response[0] === '200')) {
-            return Promise.resolve(cache.response);
+    private getRootRouterData(): Promise<Router.NodeDataStructOutput> {
+        if (this.cache && (Date.now() < this.cache.expirationTime)) {
+            return Promise.resolve(this.cache.nodeData);
         }
 
         return new Promise((resolve, reject) => {
             this.curator.getRootRouter()
-                .then((rootRouterData) => {
-                    cache.expirationTime = Date.now() + Number(rootRouterData[4]) * 1000;
-                    if (!Resolver.responsesIdentical(cache.response, rootRouterData)) {
-                        this.rootRouterCache.getNextNode.clear();
-                        this.rootRouterCache.childRouters.clear();
-                        cache.response = rootRouterData;
-                    }
+                .then((nodeData) => {
+                    this.cache = {
+                        expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
+                        nodeData,
+                        codes: new Map<number, Cache>()
+                    };
 
-                    if (rootRouterData[0] === '200') {
-                        resolve(rootRouterData);
+                    if (nodeData.responseCode.eq(ResponseCode.OK)) {
+                        resolve(this.cache.nodeData);
                     } else {
-                        reject(rootRouterData);
+                        reject(new Error('Failed to get node data.'));
                     }
                 })
                 .catch(reject);
         });
     }
 
-    private getRouter(chainId: number, address: string): Router {
-        const provider = this.providers.get(chainId);
+    private getRouter(router: Router.RouterStructOutput): Router {
+        const provider = this.providers.get(router.chainId.toNumber());
         if (!provider) {
             throw new Error(`Chain ${ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
         }
 
-        if (!this.router) {
-            this.router = new Router(address, provider);
-        } else {
-            this.router.updateContract(address, provider);
-        }
-
-        return this.router;
-    }
-
-    private getNextNodeData(nodeData: string[], code: number): Promise<string[]> {
-        const router = this.getRouter(Number(nodeData[2]), nodeData[3]);
-        return router.getNextNode(BigNumber.from(code));
+        return Router__factory.connect(router.adr, provider);
     }
 
 
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
 
-    public getPhoneNumberData(phoneNumber: string): Promise<string[]> {
+    public getSipUri(phoneNumber: string): Promise<string> {
         return new Promise(async (resolve, reject) => {
             let nodeData = await this.getRootRouterData();
-            let routerCache = this.rootRouterCache;
+            let routerCache = this.cache as Cache;
 
             let index = 0;
             while (index < phoneNumber.length) {
-                const poolCodeLength = Number(nodeData[1]);
+                const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
                 if (phoneNumber.length < index + poolCodeLength) {
-                    reject(['400', '', '', '', '']);
+                    reject(new Error(''));
                 }
 
                 const code = Number(phoneNumber.substring(index, index + poolCodeLength));
-                const callCache = routerCache.getNextNode.get(code);
+                const callCache = this.useCache ? routerCache.codes.get(code) : null;
                 if (callCache && (Date.now() < callCache.expirationTime)) {
-                    nodeData = callCache.response;
+                    nodeData = callCache.nodeData;
                 } else {
-                    nodeData = await this.getNextNodeData(nodeData, code);
-                    Resolver.updateRouterCache(routerCache, code, nodeData);
+                    const router = this.getRouter(nodeData.router);
+                    nodeData = await router.getNodeData(code);
+                    routerCache.codes.set(code, {
+                        expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
+                        nodeData,
+                        codes: new Map<number, Cache>()
+                    });
                 }
 
-                if (nodeData[0] !== '200') {
+                if (!nodeData.responseCode.eq(ResponseCode.OK)) {
                     reject(nodeData);
                 }
 
                 // @ts-ignore
-                routerCache = routerCache.childRouters.get(code);
+                routerCache = routerCache.codes.get(code);
 
                 index += poolCodeLength;
             }
 
-            resolve(nodeData);
+            resolve(nodeData.sipUri);
         });
     }
 }

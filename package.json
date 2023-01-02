@@ -1,12 +1,12 @@
 {
-  "name": "mvts-resolver-js",
-  "version": "0.2.0",
+  "name": "@mvts/resolver-js",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc"
+  "version": "0.2.0",
+  "author": {
+    "name": "Sergey Bondarenko QUIC-PRO Inc. developer",
+    "email": "sergey@quic.pro"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quic-pro/mvts-resolver-js.git"
@@ -14,22 +14,21 @@
   "keywords": [
     "mvts"
   ],
-  "author": {
-    "name": "Sergey Bondarenko QUIC-PRO Inc. developer",
-    "email": "sergey@quic.pro"
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prebuild": "shx rm -rf ./dist",
+    "build": "tsc"
   },
-  "license": "MIT",
   "dependencies": {
     "@ethersproject/bignumber": "^5.7.0",
-    "@ethersproject/contracts": "^5.7.0",
-    "@ethersproject/providers": "^5.7.2"
+    "@ethersproject/providers": "^5.7.2",
+    "@mvts/contract-interfaces-js": "git+https://github.com/quic-pro/mvts-contract-interfaces-js.git"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "typescript": "^4.9.3"
-  },
-  "bugs": {
-    "url": "https://github.com/quic-pro/mvts-resolver-js/issues"
-  },
-  "homepage": "https://github.com/quic-pro/mvts-resolver-js#readme"
+    "@types/node": "^18.11.17",
+    "shx": "^0.3.4",
+    "typescript": "^4.9.4"
+  }
 }
+

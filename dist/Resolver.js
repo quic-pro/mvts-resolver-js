@@ -1,141 +1,108 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Resolver = void 0;
 const providers_1 = require("@ethersproject/providers");
-const bignumber_1 = require("@ethersproject/bignumber");
-const contracts_1 = require("./contracts");
+const contract_interfaces_js_1 = require("@mvts/contract-interfaces-js");
 const constants_1 = require("./constants");
+const utils_1 = require("./utils");
+const types_1 = require("./types");
 class Resolver {
-    constructor(curator, options) {
+    constructor(options = {}) {
         this.providers = new Map();
-        if (!options || !options.useOnlyCustomProviders) {
+        if (options.useDefaultRpcUrls) {
             const entries = Object.entries(constants_1.DEFAULT_RPC_URLS);
-            entries.forEach(([chainId, url]) => this.providers.set(Number(chainId), new providers_1.JsonRpcProvider(url)));
+            entries.forEach(([chainId, rpcUrl]) => this.providers.set(Number(chainId), new providers_1.JsonRpcProvider(rpcUrl)));
         }
-        if (options && options.customProviders) {
-            const entries = Object.entries(options.customProviders);
-            entries.forEach(([chainId, provider]) => this.providers.set(Number(chainId), provider));
-        }
-        if (!curator) {
-            const provider = this.providers.get(constants_1.ACTUAL_CURATOR_CHAIN_ID);
-            if (!provider) {
-                throw new Error(`Chain ${constants_1.ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
-            }
-            curator = new contracts_1.Curator(constants_1.ACTUAL_CURATOR_ADDRESS, provider);
-        }
-        this.curator = curator;
-        this.router = null;
-        this.curatorCache = {
-            getRootRouter: {
-                expirationTime: 0,
-                response: []
-            }
-        };
-        this.rootRouterCache = {
-            getNextNode: new Map(),
-            childRouters: new Map()
-        };
-    }
-    // ----- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
-    providers;
-    curator;
-    curatorCache;
-    rootRouterCache;
-    router;
-    // ----- [ STATIC PRIVATE METHODS ] --------------------------------------------------------------------------------
-    static responsesIdentical(a, b) {
-        if (a.length != b.length) {
-            return false;
-        }
-        for (let i = 0; i < a.length; ++i) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-    static updateRouterCache(routerCache, code, response) {
-        routerCache.getNextNode.set(code, {
-            expirationTime: Date.now() + Number(response[4]) * 1000,
-            response: response
-        });
-        if (response[1] !== '0') {
-            routerCache.childRouters.set(code, {
-                getNextNode: new Map(),
-                childRouters: new Map()
+        if (options.rpcUrlsAndProviders) {
+            const entries = Object.entries(options.rpcUrlsAndProviders);
+            entries.forEach(([chainId, rpcUrlOrProvider]) => {
+                if (typeof rpcUrlOrProvider === 'string') {
+                    this.providers.set(Number(chainId), new providers_1.JsonRpcProvider(rpcUrlOrProvider, chainId));
+                }
+                else {
+                    this.providers.set(Number(chainId), rpcUrlOrProvider);
+                }
             });
         }
+        if (options.curator) {
+            this.curator = options.curator;
+        }
+        else {
+            this.curator = (0, utils_1.getActualCurator)(this.providers.get(constants_1.ACTUAL_CURATOR_CHAIN_ID));
+        }
+        this.cache = null;
+        this.useCache = options.useCache ?? true;
     }
+    // ----- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
+    cache;
+    useCache;
+    // ----- [ PUBLIC PROPERTIES ] -------------------------------------------------------------------------------------
+    providers;
+    curator;
     // ----- [ PRIVATE METHODS ] ---------------------------------------------------------------------------------------
     getRootRouterData() {
-        const cache = this.curatorCache.getRootRouter;
-        if ((Date.now() < cache.expirationTime) && (cache.response[0] === '200')) {
-            return Promise.resolve(cache.response);
+        if (this.cache && (Date.now() < this.cache.expirationTime)) {
+            return Promise.resolve(this.cache.nodeData);
         }
         return new Promise((resolve, reject) => {
             this.curator.getRootRouter()
-                .then((rootRouterData) => {
-                cache.expirationTime = Date.now() + Number(rootRouterData[4]) * 1000;
-                if (!Resolver.responsesIdentical(cache.response, rootRouterData)) {
-                    this.rootRouterCache.getNextNode.clear();
-                    this.rootRouterCache.childRouters.clear();
-                    cache.response = rootRouterData;
-                }
-                if (rootRouterData[0] === '200') {
-                    resolve(rootRouterData);
+                .then((nodeData) => {
+                this.cache = {
+                    expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
+                    nodeData,
+                    codes: new Map()
+                };
+                if (nodeData.responseCode.eq(types_1.ResponseCode.OK)) {
+                    resolve(this.cache.nodeData);
                 }
                 else {
-                    reject(rootRouterData);
+                    reject(new Error('Failed to get node data.'));
                 }
             })
                 .catch(reject);
         });
     }
-    getRouter(chainId, address) {
-        const provider = this.providers.get(chainId);
+    getRouter(router) {
+        const provider = this.providers.get(router.chainId.toNumber());
         if (!provider) {
             throw new Error(`Chain ${constants_1.ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
         }
-        if (!this.router) {
-            this.router = new contracts_1.Router(address, provider);
-        }
-        else {
-            this.router.updateContract(address, provider);
-        }
-        return this.router;
-    }
-    getNextNodeData(nodeData, code) {
-        const router = this.getRouter(Number(nodeData[2]), nodeData[3]);
-        return router.getNextNode(bignumber_1.BigNumber.from(code));
+        return contract_interfaces_js_1.Router__factory.connect(router.adr, provider);
     }
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
-    getPhoneNumberData(phoneNumber) {
+    getSipUri(phoneNumber) {
         return new Promise(async (resolve, reject) => {
             let nodeData = await this.getRootRouterData();
-            let routerCache = this.rootRouterCache;
+            let routerCache = this.cache;
             let index = 0;
             while (index < phoneNumber.length) {
-                const poolCodeLength = Number(nodeData[1]);
+                const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
                 if (phoneNumber.length < index + poolCodeLength) {
-                    reject(['400', '', '', '', '']);
+                    reject(new Error(''));
                 }
                 const code = Number(phoneNumber.substring(index, index + poolCodeLength));
-                const callCache = routerCache.getNextNode.get(code);
+                const callCache = this.useCache ? routerCache.codes.get(code) : null;
                 if (callCache && (Date.now() < callCache.expirationTime)) {
-                    nodeData = callCache.response;
+                    nodeData = callCache.nodeData;
                 }
                 else {
-                    nodeData = await this.getNextNodeData(nodeData, code);
-                    Resolver.updateRouterCache(routerCache, code, nodeData);
+                    const router = this.getRouter(nodeData.router);
+                    nodeData = await router.getNodeData(code);
+                    routerCache.codes.set(code, {
+                        expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
+                        nodeData,
+                        codes: new Map()
+                    });
                 }
-                if (nodeData[0] !== '200') {
+                if (!nodeData.responseCode.eq(types_1.ResponseCode.OK)) {
                     reject(nodeData);
                 }
                 // @ts-ignore
-                routerCache = routerCache.childRouters.get(code);
+                routerCache = routerCache.codes.get(code);
                 index += poolCodeLength;
             }
-            resolve(nodeData);
+            resolve(nodeData.sipUri);
         });
     }
 }
-exports.default = Resolver;
+exports.Resolver = Resolver;
