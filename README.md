@@ -6,9 +6,9 @@
 
 ```javascript
 // CommonJS
-const Resolver = require('@mvts/resolver-js');
+const {Resolver} = require('@mvts/resolver-js');
 // ES6
-import Resolver from '@mvts/resolver-js';
+import {Resolver} from '@mvts/resolver-js';
 
 
 const resolver = new Resolver();
@@ -17,18 +17,29 @@ resolver.getSipUri('30010645')
     .catch(console.log);
 ```
 
-| Method      | Parameters                             | Return value      | Description                                      |
-|-------------|----------------------------------------|-------------------|--------------------------------------------------|
-| constructor | curator?: Curator<br>options?: Options |                   |                                                  |
-| getSipUri   | phoneNumber: string                    | Promise\<string\> | Returns the phone number data for making a call. |
+| Method      | Parameters               | Return value      | Description                                      |
+|-------------|--------------------------|-------------------|--------------------------------------------------|
+| constructor | options: ResolverOptions |                   |                                                  |
+| getUseCache |                          | boolean           |                                                  |
+| setUseCache | useCache: boolean        | void              |                                                  |
+| clearCache  |                          | void              |                                                  |
+| getSipUri   | phoneNumber: string      | Promise\<string\> | Returns the phone number data for making a call. |
 
-## constants
+## Constants
 
 ```javascript
 // CommonJS
-const {constants} = require('@mvts/resolver-js');
+const {
+    ACTUAL_CURATOR_CHAIN_ID,
+    ACTUAL_CURATOR_ADDRESS,
+    DEFAULT_RPC_URLS
+} = require('@mvts/resolver-js');
 // ES6
-import {constants} from '@mvts/resolver-js';
+import {
+    ACTUAL_CURATOR_CHAIN_ID,
+    ACTUAL_CURATOR_ADDRESS,
+    DEFAULT_RPC_URLS
+} from '@mvts/resolver-js';
 ```
 
 | Name                    | Type   | Description                                                                                                                   |
@@ -37,13 +48,13 @@ import {constants} from '@mvts/resolver-js';
 | ACTUAL_CURATOR_ADDRESS  | string | The address of the current smart contract Curator.                                                                            |
 | DEFAULT_RPC_URLS        | object | Default RPC URLs. It is guaranteed that this is enough to work with chains in which the curator and root router are deployed. |
 
-## utils
+## Utils
 
 ```javascript
 // CommonJS
-const {utils} = require('@mvts/resolver-js');
+const {getActualCurator} = require('@mvts/resolver-js');
 // ES6
-import {utils} from '@mvts/resolver-js';
+import {getActualCurator} from '@mvts/resolver-js';
 ```
 
 | Name             | Parameters | Return value | Description                |

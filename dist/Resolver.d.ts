@@ -1,5 +1,5 @@
 import { Provider } from '@ethersproject/providers';
-import { Curator } from '@mvts/contract-interfaces-js';
+import { Curator, Router } from '@mvts/contract-interfaces-js';
 export type ResolverOptions = {
     curator?: Curator;
     rpcUrlsAndProviders?: {
@@ -8,13 +8,24 @@ export type ResolverOptions = {
     useDefaultRpcUrls?: boolean;
     useCache?: boolean;
 };
+type NodeCache = {
+    expirationTime: number;
+    nodeData: Router.NodeDataStructOutput;
+    codes: Map<number, NodeCache>;
+};
 export declare class Resolver {
     constructor(options?: ResolverOptions);
     private cache;
-    private useCache;
+    protected useCache: boolean;
     readonly providers: Map<number, Provider>;
     readonly curator: Curator;
-    private getRootRouterData;
-    private getRouter;
+    private addProviders;
+    protected createCache(nodeData: Router.NodeDataStructOutput): NodeCache;
+    protected getRootRouterData(): Promise<Router.NodeDataStructOutput>;
+    protected getRouter(router: Router.RouterStructOutput): Router | never;
+    getUseCache(): boolean;
+    setUseCache(useCache: boolean): void;
+    clearCache(): void;
     getSipUri(phoneNumber: string): Promise<string>;
 }
+export {};

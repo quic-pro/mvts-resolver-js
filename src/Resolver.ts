@@ -1,7 +1,6 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
 import {Curator, Router, Router__factory} from '@mvts/contract-interfaces-js';
 
-
 import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
 import {getActualCurator} from './utils';
 import {ResponseCode} from './types';
@@ -17,38 +16,24 @@ export type ResolverOptions = {
 };
 
 
-type Cache = {
+type NodeCache = {
     expirationTime: number;
     nodeData: Router.NodeDataStructOutput;
-    codes: Map<number, Cache>;
+    codes: Map<number, NodeCache>;
 };
 
 
 export class Resolver {
     constructor(options: ResolverOptions = {}) {
         this.providers = new Map<number, Provider>();
-
-        if (options.useDefaultRpcUrls) {
-            const entries = Object.entries(DEFAULT_RPC_URLS);
-            entries.forEach(([chainId, rpcUrl]) => this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrl)));
+        if (options.useDefaultRpcUrls ?? true) {
+            this.addProviders(DEFAULT_RPC_URLS);
         }
         if (options.rpcUrlsAndProviders) {
-            const entries = Object.entries(options.rpcUrlsAndProviders);
-            entries.forEach(([chainId, rpcUrlOrProvider]) => {
-                if (typeof rpcUrlOrProvider === 'string') {
-                    this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrlOrProvider, chainId))
-                } else {
-                    this.providers.set(Number(chainId), rpcUrlOrProvider);
-                }
-            });
+            this.addProviders(options.rpcUrlsAndProviders);
         }
 
-        if (options.curator) {
-            this.curator = options.curator;
-        } else {
-            this.curator = getActualCurator(this.providers.get(ACTUAL_CURATOR_CHAIN_ID));
-        }
-
+        this.curator = options.curator ?? getActualCurator(this.providers.get(ACTUAL_CURATOR_CHAIN_ID));
         this.cache = null;
         this.useCache = options.useCache ?? true;
     }
@@ -56,8 +41,12 @@ export class Resolver {
 
     // ----- [ PRIVATE PROPERTIES ] ------------------------------------------------------------------------------------
 
-    private cache: Cache | null;
-    private useCache: boolean;
+    private cache: NodeCache | null;
+
+
+    // ----- [ PROTECTED PROPERTIES ] ----------------------------------------------------------------------------------
+
+    protected useCache: boolean;
 
 
     // ----- [ PUBLIC PROPERTIES ] -------------------------------------------------------------------------------------
@@ -68,34 +57,44 @@ export class Resolver {
 
     // ----- [ PRIVATE METHODS ] ---------------------------------------------------------------------------------------
 
-    private getRootRouterData(): Promise<Router.NodeDataStructOutput> {
-        if (this.cache && (Date.now() < this.cache.expirationTime)) {
-            return Promise.resolve(this.cache.nodeData);
-        }
-
-        return new Promise((resolve, reject) => {
-            this.curator.getRootRouter()
-                .then((nodeData) => {
-                    this.cache = {
-                        expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
-                        nodeData,
-                        codes: new Map<number, Cache>()
-                    };
-
-                    if (nodeData.responseCode.eq(ResponseCode.OK)) {
-                        resolve(this.cache.nodeData);
-                    } else {
-                        reject(new Error('Failed to get node data.'));
-                    }
-                })
-                .catch(reject);
+    private addProviders(rpcUrlsAndProviders: { [chainId: number]: string | Provider }): void {
+        const entries = Object.entries(rpcUrlsAndProviders);
+        entries.forEach(([chainId, rpcUrlOrProvider]) => {
+            if (typeof rpcUrlOrProvider === 'string') {
+                this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrlOrProvider, chainId))
+            } else {
+                this.providers.set(Number(chainId), rpcUrlOrProvider);
+            }
         });
     }
 
-    private getRouter(router: Router.RouterStructOutput): Router {
+
+    // ----- [ PROTECTED METHODS ] -------------------------------------------------------------------------------------
+
+    protected createCache(nodeData: Router.NodeDataStructOutput): NodeCache {
+        return {
+            expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
+            nodeData,
+            codes: new Map<number, NodeCache>()
+        };
+    }
+
+    protected getRootRouterData(): Promise<Router.NodeDataStructOutput> {
+        if (this.useCache && this.cache && (Date.now() < this.cache.expirationTime)) {
+            return Promise.resolve(this.cache.nodeData);
+        }
+
+        return this.curator.getRootRouter()
+            .then((nodeData) => {
+                this.cache = this.createCache(nodeData);
+                return nodeData;
+            });
+    }
+
+    protected getRouter(router: Router.RouterStructOutput): Router | never {
         const provider = this.providers.get(router.chainId.toNumber());
         if (!provider) {
-            throw new Error(`Chain ${ACTUAL_CURATOR_CHAIN_ID} not supported: provider is missing.`);
+            throw new Error(`Missing provider for chain ${router.chainId}.`);
         }
 
         return Router__factory.connect(router.adr, provider);
@@ -104,16 +103,28 @@ export class Resolver {
 
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
 
+    public getUseCache(): boolean {
+        return this.useCache;
+    }
+
+    public setUseCache(useCache: boolean): void {
+        this.useCache = useCache;
+    }
+
+    public clearCache(): void {
+        this.cache = null;
+    }
+
     public getSipUri(phoneNumber: string): Promise<string> {
         return new Promise(async (resolve, reject) => {
             let nodeData = await this.getRootRouterData();
-            let routerCache = this.cache as Cache;
+            let routerCache = this.cache as NodeCache;
 
             let index = 0;
             while (index < phoneNumber.length) {
                 const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
                 if (phoneNumber.length < index + poolCodeLength) {
-                    reject(new Error(''));
+                    reject(new Error('Phone number is wrong.'));
                 }
 
                 const code = Number(phoneNumber.substring(index, index + poolCodeLength));
@@ -123,11 +134,7 @@ export class Resolver {
                 } else {
                     const router = this.getRouter(nodeData.router);
                     nodeData = await router.getNodeData(code);
-                    routerCache.codes.set(code, {
-                        expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
-                        nodeData,
-                        codes: new Map<number, Cache>()
-                    });
+                    routerCache.codes.set(code, this.createCache(nodeData));
                 }
 
                 if (!nodeData.responseCode.eq(ResponseCode.OK)) {
