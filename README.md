@@ -74,7 +74,29 @@ resolver.getSipUri('30010645')
 
 ## Utils
 
-| Name                                                                                                        | Description                     |
-|-------------------------------------------------------------------------------------------------------------|---------------------------------|
-| getActualCurator(signerOrProvider?: Signer &vert; Provider): Curator                                        | Returns the actual curator.     |
-| getActualRootRouter(getSignerOrProvider?: (chainId: number) => Signer &vert; Provider): Promise<RootRouter> | Returns the actual root router. |
+| Name                                                                                                              | Description                                                                                                                                                                                                                                  |
+|-------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| getActualCurator(signerOrProvider?: Signer &vert; Provider): Curator                                              | Returns the actual curator.                                                                                                                                                                                                                  |
+| getActualRootRouter(getSignerOrProvider?: (chainId: number) => Signer &vert; Provider): Promise&lt;RootRouter&gt; | Returns the actual root router. The root router can change and be in any chain, so getSignerOrProvider is a function that returns the appropriate provider or signer depending on the current chainId of the root router. See example below. |
+
+#### getActualRootRouter usage example
+
+```javascript
+import {getActualRootRouter, DEFAULT_RPC_URLS} from '@mvts/resolver-js';
+import {JsonRpcProvider} from '@ethersproject/providers';
+
+
+function getSignerOrProvider(chainId) {
+    const rpcUrl =  DEFAULT_RPC_URLS[chainId];
+    if (!rpcUrl) {
+        throw new Error(`Missing provider for chain ${chainId}.`);
+    }
+
+    return new JsonRpcProvider(rpcUrl);
+}
+
+
+getActualRootRouter(getSignerOrProvider)
+    .then((rootRouter) => console.log(`Address of the actual root router: ${rootRouter.address}`))
+    .catch((error) => console.log(`Failed to get the actual root router: ${error.message}`));
+```
