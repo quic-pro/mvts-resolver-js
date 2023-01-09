@@ -2,67 +2,69 @@
 
 ***
 
-## Resolver
+## Installation
+
+Using npm:
+
+```bash
+npm install @mvts/resolver-js
+```
+
+Using yarn:
+
+```bash
+yarn add @mvts/resolver-js
+```
+
+Once the package is installed, you can import the library using import or require approach:
 
 ```javascript
 // CommonJS
 const {Resolver} = require('@mvts/resolver-js');
+
 // ES6
+import {Resolver} from '@mvts/resolver-js';
+```
+
+## Usage
+
+```javascript
 import {Resolver} from '@mvts/resolver-js';
 
 
-const resolver = new Resolver();
+const resolver = new Resolver({
+    rpcUrlsAndProviders: {
+        1: 'https://example.com/rpc/ethereum-mainnet', // Ethereum Mainnet
+        137: new JsonRpcProvider('https://example.com/rpc/polygon-mainnet') // Polygon Mainnet
+    },
+    useDefaultRpcUrls: false
+});
+
 resolver.getSipUri('30010645')
     .then((sipUri) => console.log('SIP URI:', sipUri))
-    .catch(console.log);
+    .catch((error) => console.log(`Failed to get SIP URI: ${error.message}`));
 ```
 
-| Method      | Parameters               | Return value      | Description                                      |
-|-------------|--------------------------|-------------------|--------------------------------------------------|
-| constructor | options: ResolverOptions |                   |                                                  |
-| getUseCache |                          | boolean           |                                                  |
-| setUseCache | useCache: boolean        | void              |                                                  |
-| clearCache  |                          | void              |                                                  |
-| getSipUri   | phoneNumber: string      | Promise\<string\> | Returns the phone number data for making a call. |
+#### Options
 
-#### ResolverOptions
 
-```javascript
-const resolver = new Resolver({
-    curator: new MyCurator(),
-    rpcUrlsAndProviders: {
-        80001: 'https://matic-mumbai.chainstacklabs.com',
-        11155111: new JsonRpcProvider('https://rpc.sepolia.org')
-    },
-    useDefaultRpcUrls: false,
-    useCache: true
-});
-```
+| Name                           | Type                                        | Default                                | Description                                                                                                                             |
+|--------------------------------|---------------------------------------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| curator (optional)             | Curator                                     | getActualCurator()                     | Custom curator. You can specify your curator, for example, for faster routing through your pool of numbers.                             |
+| rpcUrlsAndProviders (optional) | {[chainId: number]: string &vert; Provider} | DEFAULT_RPC_URLS if useDefaultRpcUrls  | DEFAULT_RPC_URLS are public so can be unreliable and slow, so you can specify your own RPC URLs and providers.                          |
+| useDefaultRpcUrls (optional)   | boolean                                     | true                                   | This option allows you to disable the use of RPC URLs by default. By default are used.                                                  |
+| useCache (optional)            | boolean                                     | true                                   | The resolver caches the data and uses it according to TTL. This option allows you to disable cache usage. The cache is used by default. |
 
-| Name                | Required | Type                                        | Default | Description |
-|---------------------|----------|---------------------------------------------|---------|-------------|
-| curator             | No       | Curator                                     | -       |             |
-| rpcUrlsAndProviders | No       | {[chainId: number]: string &#124; Provider} | -       |             |
-| useDefaultRpcUrls   | No       | boolean                                     | true    |             |
-| useCache            | No       | boolean                                     | true    |             |
+#### Methods
 
+| Name                                            | Description                                                                                  |
+|-------------------------------------------------|----------------------------------------------------------------------------------------------|
+| getUseCache(): boolean                          | Returns the current value of the useCache flag, which enables/disables the use of the cache. |
+| setUseCache(useCache: boolean): void            | Changes the value of the useCache flag, which enables/disables the use of the cache.         |
+| clearCache(): void                              | Clears the cache.                                                                            |
+| getSipUri(phoneNumber: string): Promise<string> | Returns SIP URI for making a call.                                                           |
 
 ## Constants
-
-```javascript
-// CommonJS
-const {
-    ACTUAL_CURATOR_CHAIN_ID,
-    ACTUAL_CURATOR_ADDRESS,
-    DEFAULT_RPC_URLS
-} = require('@mvts/resolver-js');
-// ES6
-import {
-    ACTUAL_CURATOR_CHAIN_ID,
-    ACTUAL_CURATOR_ADDRESS,
-    DEFAULT_RPC_URLS
-} from '@mvts/resolver-js';
-```
 
 | Name                    | Type   | Description                                                                                                                   |
 |-------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
@@ -72,14 +74,7 @@ import {
 
 ## Utils
 
-```javascript
-// CommonJS
-const {getActualCurator, getActualRootRouter} = require('@mvts/resolver-js');
-// ES6
-import {getActualCurator, getActualRootRouter} from '@mvts/resolver-js';
-```
-
-| Name                | Parameters                                                        | Return value              | Description                     |
-|---------------------|-------------------------------------------------------------------|---------------------------|---------------------------------|
-| getActualCurator    | signerOrProvider?: Signer &#124; Provider                         | Curator                   | Returns the actual curator.     |
-| getActualRootRouter | getSignerOrProvider?: (chainId: number) => Signer &#124; Provider | Promise&lt;RootRouter&gt; | Returns the actual root router. |
+| Name                                                                                                        | Description                     |
+|-------------------------------------------------------------------------------------------------------------|---------------------------------|
+| getActualCurator(signerOrProvider?: Signer &vert; Provider): Curator                                        | Returns the actual curator.     |
+| getActualRootRouter(getSignerOrProvider?: (chainId: number) => Signer &vert; Provider): Promise<RootRouter> | Returns the actual root router. |
