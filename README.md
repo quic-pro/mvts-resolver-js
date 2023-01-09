@@ -74,11 +74,12 @@ import {
 
 ```javascript
 // CommonJS
-const {getActualCurator} = require('@mvts/resolver-js');
+const {getActualCurator, getActualRootRouter} = require('@mvts/resolver-js');
 // ES6
-import {getActualCurator} from '@mvts/resolver-js';
+import {getActualCurator, getActualRootRouter} from '@mvts/resolver-js';
 ```
 
-| Name             | Parameters                                | Return value | Description                 |
-|------------------|-------------------------------------------|--------------|-----------------------------|
-| getActualCurator | signerOrProvider?: Signer &#124; Provider | Curator      | Returns the actual curator. |
+| Name                | Parameters                                                        | Return value              | Description                     |
+|---------------------|-------------------------------------------------------------------|---------------------------|---------------------------------|
+| getActualCurator    | signerOrProvider?: Signer &#124; Provider                         | Curator                   | Returns the actual curator.     |
+| getActualRootRouter | getSignerOrProvider?: (chainId: number) => Signer &#124; Provider | Promise&lt;RootRouter&gt; | Returns the actual root router. |
