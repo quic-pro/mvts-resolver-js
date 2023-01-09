@@ -25,6 +25,28 @@ resolver.getSipUri('30010645')
 | clearCache  |                          | void              |                                                  |
 | getSipUri   | phoneNumber: string      | Promise\<string\> | Returns the phone number data for making a call. |
 
+#### ResolverOptions
+
+```javascript
+const resolver = new Resolver({
+    curator: new MyCurator(),
+    rpcUrlsAndProviders: {
+        80001: 'https://matic-mumbai.chainstacklabs.com',
+        11155111: new JsonRpcProvider('https://rpc.sepolia.org')
+    },
+    useDefaultRpcUrls: false,
+    useCache: true
+});
+```
+
+| Name                | Required | Type                                        | Default | Description |
+|---------------------|----------|---------------------------------------------|---------|-------------|
+| curator             | No       | Curator                                     | -       |             |
+| rpcUrlsAndProviders | No       | {[chainId: number]: string &#124; Provider} | -       |             |
+| useDefaultRpcUrls   | No       | boolean                                     | true    |             |
+| useCache            | No       | boolean                                     | true    |             |
+
+
 ## Constants
 
 ```javascript
@@ -57,6 +79,6 @@ const {getActualCurator} = require('@mvts/resolver-js');
 import {getActualCurator} from '@mvts/resolver-js';
 ```
 
-| Name             | Parameters | Return value | Description                |
-|------------------|------------|--------------|----------------------------|
-| getActualCurator |            | Curator      | Returns the actual curator. |
+| Name             | Parameters                                | Return value | Description                 |
+|------------------|-------------------------------------------|--------------|-----------------------------|
+| getActualCurator | signerOrProvider?: Signer &#124; Provider | Curator      | Returns the actual curator. |
