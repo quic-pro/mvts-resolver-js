@@ -5,7 +5,6 @@
     "target": "esnext",
     /*** Modules ******************************************************************************************************/
     "module": "commonjs",
-    "resolveJsonModule": true,
     "rootDir": "./src",
     "moduleResolution": "node",
     "baseUrl": "./src",
@@ -20,7 +19,6 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "./src/**/*",
-    "./src/**/*.json"
+    "./src/**/*"
   ]
 }
