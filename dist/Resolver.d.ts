@@ -20,8 +20,8 @@ export declare class Resolver {
     readonly providers: Map<number, Provider>;
     readonly curator: Curator;
     private addProviders;
-    protected createCache(nodeData: Router.NodeDataStructOutput): NodeCache;
     protected getRootRouterData(): Promise<Router.NodeDataStructOutput>;
+    protected createCache(nodeData: Router.NodeDataStructOutput): NodeCache;
     protected getRouter(router: Router.RouterStructOutput): Router | never;
     getUseCache(): boolean;
     setUseCache(useCache: boolean): void;
