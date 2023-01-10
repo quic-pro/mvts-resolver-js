@@ -1,7 +1,5 @@
 # @mvts/resolver-js
 
-***
-
 ## Installation
 
 Using npm:
@@ -26,10 +24,13 @@ const {Resolver} = require('@mvts/resolver-js');
 import {Resolver} from '@mvts/resolver-js';
 ```
 
+<br/>
+
 ## Usage
 
 ```javascript
 import {Resolver} from '@mvts/resolver-js';
+import {JsonRpcProvider} from '@ethersproject/providers';
 
 
 const resolver = new Resolver({
@@ -64,6 +65,8 @@ resolver.getSipUri('30010645')
 | clearCache(): void                              | Clears the cache.                                                                            |
 | getSipUri(phoneNumber: string): Promise<string> | Returns SIP URI for making a call.                                                           |
 
+<br/>
+
 ## Constants
 
 | Name                    | Type   | Description                                                                                                                   |
@@ -71,6 +74,8 @@ resolver.getSipUri('30010645')
 | ACTUAL_CURATOR_CHAIN_ID | number | The chain ID of the current smart contract Curator.                                                                           |
 | ACTUAL_CURATOR_ADDRESS  | string | The address of the current smart contract Curator.                                                                            |
 | DEFAULT_RPC_URLS        | object | Default RPC URLs. It is guaranteed that this is enough to work with chains in which the curator and root router are deployed. |
+
+<br/>
 
 ## Utils
 
