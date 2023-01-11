@@ -19,11 +19,13 @@
   "scripts": {
     "prebuild": "shx rm -rf ./dist",
     "build": "tsc",
+    "lint": "eslint ./src",
+    "lint:fix": "yarn lint --fix",
     "prepublish": "yarn build"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn build"
+      "pre-commit": "yarn lint && yarn build"
     }
   },
   "dependencies": {
@@ -33,6 +35,9 @@
   },
   "devDependencies": {
     "@types/node": "^18.11.17",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "eslint": "^8.31.0",
     "husky": "^8.0.3",
     "shx": "^0.3.4",
     "typescript": "^4.9.4"
