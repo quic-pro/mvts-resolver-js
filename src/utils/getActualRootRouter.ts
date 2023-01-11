@@ -13,11 +13,11 @@ export function getActualRootRouter(getSignerOrProvider?: (chainId: number) => S
     return curator.getRootRouter()
         .then(({responseCode, router}) => {
             if (!responseCode.eq(ResponseCode.OK)) {
-                throw new Error(`Response code ${responseCode}.`);
+                throw new Error(`Response code ${responseCode.toString()}.`);
             }
 
             if (!getSignerOrProvider) {
-                getSignerOrProvider = (chainId: number) => new JsonRpcProvider(DEFAULT_RPC_URLS[chainId])
+                getSignerOrProvider = (chainId: number) => new JsonRpcProvider(DEFAULT_RPC_URLS[chainId]);
             }
 
             return RootRouter__factory.connect(router.adr, getSignerOrProvider(router.chainId.toNumber()));

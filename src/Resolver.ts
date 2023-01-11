@@ -8,13 +8,10 @@ import {ResponseCode} from './types';
 
 export type ResolverOptions = {
     curator?: Curator;
-    rpcUrlsAndProviders?: {
-        [chainId: number]: string | Provider;
-    };
+    rpcUrlsAndProviders?: Record<number, string | Provider>;
     useDefaultRpcUrls?: boolean;
     useCache?: boolean;
 };
-
 
 type NodeCache = {
     expirationTime: number;
@@ -57,11 +54,11 @@ export class Resolver {
 
     // ----- [ PRIVATE METHODS ] ---------------------------------------------------------------------------------------
 
-    private addProviders(rpcUrlsAndProviders: { [chainId: number]: string | Provider }): void {
+    private addProviders(rpcUrlsAndProviders: Record<number, string | Provider>): void {
         const entries = Object.entries(rpcUrlsAndProviders);
         entries.forEach(([chainId, rpcUrlOrProvider]) => {
             if (typeof rpcUrlOrProvider === 'string') {
-                this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrlOrProvider))
+                this.providers.set(Number(chainId), new JsonRpcProvider(rpcUrlOrProvider));
             } else {
                 this.providers.set(Number(chainId), rpcUrlOrProvider);
             }
@@ -94,7 +91,7 @@ export class Resolver {
     protected getRouter(router: Router.RouterStructOutput): Router | never {
         const provider = this.providers.get(router.chainId.toNumber());
         if (!provider) {
-            throw new Error(`Missing provider for chain ${router.chainId}.`);
+            throw new Error(`Missing provider for chain ${router.chainId.toString()}.`);
         }
 
         return Router__factory.connect(router.adr, provider);
@@ -116,51 +113,53 @@ export class Resolver {
     }
 
     public getSipUri(phoneNumber: string): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let nodeData = await this.getRootRouterData();
-                let routerCache = this.cache as NodeCache;
+        return new Promise((resolve, reject) => {
+            void (async () => {
+                try {
+                    let nodeData = await this.getRootRouterData();
+                    let routerCache = this.cache!;
 
-                do {
-                    if (!nodeIsPool(nodeData)) {
-                        reject(new Error('Invalid phone number: intermediate node is not a pool.'));
-                    }
+                    do {
+                        if (!nodeIsPool(nodeData)) {
+                            reject(new Error('Invalid phone number: intermediate node is not a pool.'));
+                        }
 
-                    const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
-                    if (phoneNumber.length < poolCodeLength) {
+                        const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
+                        if (phoneNumber.length < poolCodeLength) {
+                            reject(new Error('Invalid phone number: invalid length.'));
+                        }
+
+                        const code = Number(phoneNumber.slice(0, poolCodeLength));
+                        if (isNaN(code)) {
+                            reject(new Error('Invalid phone number: invalid symbols.'));
+                        }
+                        phoneNumber = phoneNumber.slice(poolCodeLength);
+
+                        const codeCache = routerCache.codes.get(code);
+                        if (this.useCache && codeCache && (Date.now() < codeCache.expirationTime)) {
+                            nodeData = codeCache.nodeData;
+                        } else {
+                            const router = this.getRouter(nodeData.router);
+                            nodeData = await router.getNodeData(code);
+                            routerCache.codes.set(code, this.createCache(nodeData));
+                        }
+
+                        if (!nodeData.responseCode.eq(ResponseCode.OK)) {
+                            reject(new Error(`Response code ${nodeData.responseCode.toString()}.`));
+                        }
+
+                        routerCache = routerCache.codes.get(code)!;
+                    } while (phoneNumber.length);
+
+                    if (!nodeIsNumber(nodeData)) {
                         reject(new Error('Invalid phone number: invalid length.'));
                     }
 
-                    const code = Number(phoneNumber.slice(0, poolCodeLength));
-                    if (isNaN(code)) {
-                        reject(new Error('Invalid phone number: invalid symbols.'));
-                    }
-                    phoneNumber = phoneNumber.slice(poolCodeLength);
-
-                    const codeCache = routerCache.codes.get(code);
-                    if (this.useCache && codeCache && (Date.now() < codeCache.expirationTime)) {
-                        nodeData = codeCache.nodeData;
-                    } else {
-                        const router = this.getRouter(nodeData.router);
-                        nodeData = await router.getNodeData(code);
-                        routerCache.codes.set(code, this.createCache(nodeData));
-                    }
-
-                    if (!nodeData.responseCode.eq(ResponseCode.OK)) {
-                        reject(new Error(`Response code ${nodeData.responseCode.toString()}.`));
-                    }
-
-                    routerCache = routerCache.codes.get(code) as NodeCache;
-                } while (phoneNumber.length);
-
-                if (!nodeIsNumber(nodeData)) {
-                    reject(new Error('Invalid phone number: invalid length.'));
+                    resolve(nodeData.sipUri);
+                } catch (error) {
+                    reject(new Error(`Failed to get SIP URI: ${error instanceof Error ? error.message : 'an unknown error occurred.'}`));
                 }
-
-                resolve(nodeData.sipUri);
-            } catch (error) {
-                reject(new Error(`Failed to get SIP URI: ${error instanceof Error ? error.message : error}`));
-            }
+            })();
         });
     }
 }

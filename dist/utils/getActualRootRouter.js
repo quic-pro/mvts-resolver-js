@@ -11,7 +11,7 @@ function getActualRootRouter(getSignerOrProvider) {
     return curator.getRootRouter()
         .then(({ responseCode, router }) => {
         if (!responseCode.eq(types_1.ResponseCode.OK)) {
-            throw new Error(`Response code ${responseCode}.`);
+            throw new Error(`Response code ${responseCode.toString()}.`);
         }
         if (!getSignerOrProvider) {
             getSignerOrProvider = (chainId) => new providers_1.JsonRpcProvider(constants_1.DEFAULT_RPC_URLS[chainId]);

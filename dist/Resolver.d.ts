@@ -2,9 +2,7 @@ import { Provider } from '@ethersproject/providers';
 import { Curator, Router } from '@mvts/contract-interfaces-js';
 export type ResolverOptions = {
     curator?: Curator;
-    rpcUrlsAndProviders?: {
-        [chainId: number]: string | Provider;
-    };
+    rpcUrlsAndProviders?: Record<number, string | Provider>;
     useDefaultRpcUrls?: boolean;
     useCache?: boolean;
 };
