@@ -88,6 +88,45 @@ export class Resolver {
         };
     }
 
+    protected async getNodeData(phoneNumber: string): Promise<Router.NodeDataStructOutput> {
+        let nodeData = await this.getRootRouterData();
+        let routerCache = this.cache;
+
+        do {
+            if (!nodeIsPool(nodeData)) {
+                throw new Error('Invalid phone number: intermediate node is not a pool.');
+            }
+
+            const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
+            if (phoneNumber.length < poolCodeLength) {
+                throw new Error('Invalid phone number: invalid length.');
+            }
+
+            const code = Number(phoneNumber.slice(0, poolCodeLength));
+            if (isNaN(code)) {
+                throw new Error('Invalid phone number: invalid symbols.');
+            }
+            phoneNumber = phoneNumber.slice(poolCodeLength);
+
+            const codeCache = routerCache?.codes.get(code) ?? null;
+            if (this.useCache && codeCache && (Date.now() < codeCache.expirationTime)) {
+                nodeData = codeCache.nodeData;
+            } else {
+                const router = this.getRouter(nodeData.router);
+                nodeData = await router.getNodeData(code);
+                routerCache?.codes.set(code, this.createCache(nodeData));
+            }
+
+            if (!nodeData.responseCode.eq(ResponseCode.OK)) {
+                throw new Error(`Response code ${nodeData.responseCode.toString()}.`);
+            }
+
+            routerCache = routerCache?.codes.get(code) ?? null;
+        } while (phoneNumber.length);
+
+        return nodeData;
+    }
+
     protected getRouter(router: Router.RouterStructOutput): Router | never {
         const provider = this.providers.get(router.chainId.toNumber());
         if (!provider) {
@@ -113,53 +152,13 @@ export class Resolver {
     }
 
     public getSipUri(phoneNumber: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            void (async () => {
-                try {
-                    let nodeData = await this.getRootRouterData();
-                    let routerCache = this.cache!;
-
-                    do {
-                        if (!nodeIsPool(nodeData)) {
-                            reject(new Error('Invalid phone number: intermediate node is not a pool.'));
-                        }
-
-                        const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
-                        if (phoneNumber.length < poolCodeLength) {
-                            reject(new Error('Invalid phone number: invalid length.'));
-                        }
-
-                        const code = Number(phoneNumber.slice(0, poolCodeLength));
-                        if (isNaN(code)) {
-                            reject(new Error('Invalid phone number: invalid symbols.'));
-                        }
-                        phoneNumber = phoneNumber.slice(poolCodeLength);
-
-                        const codeCache = routerCache.codes.get(code);
-                        if (this.useCache && codeCache && (Date.now() < codeCache.expirationTime)) {
-                            nodeData = codeCache.nodeData;
-                        } else {
-                            const router = this.getRouter(nodeData.router);
-                            nodeData = await router.getNodeData(code);
-                            routerCache.codes.set(code, this.createCache(nodeData));
-                        }
-
-                        if (!nodeData.responseCode.eq(ResponseCode.OK)) {
-                            reject(new Error(`Response code ${nodeData.responseCode.toString()}.`));
-                        }
-
-                        routerCache = routerCache.codes.get(code)!;
-                    } while (phoneNumber.length);
-
-                    if (!nodeIsNumber(nodeData)) {
-                        reject(new Error('Invalid phone number: invalid length.'));
-                    }
-
-                    resolve(nodeData.sipUri);
-                } catch (error) {
-                    reject(new Error(`Failed to get SIP URI: ${error instanceof Error ? error.message : 'an unknown error occurred.'}`));
+        return this.getNodeData(phoneNumber)
+            .then((nodeData) => {
+                if (!nodeIsNumber(nodeData)) {
+                    throw new Error('Invalid phone number: invalid length.');
                 }
-            })();
-        });
+
+                return nodeData.sipUri;
+            });
     }
 }

@@ -20,6 +20,7 @@ export declare class Resolver {
     private addProviders;
     protected getRootRouterData(): Promise<Router.NodeDataStructOutput>;
     protected createCache(nodeData: Router.NodeDataStructOutput): NodeCache;
+    protected getNodeData(phoneNumber: string): Promise<Router.NodeDataStructOutput>;
     protected getRouter(router: Router.RouterStructOutput): Router | never;
     getUseCache(): boolean;
     setUseCache(useCache: boolean): void;
