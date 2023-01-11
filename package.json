@@ -18,17 +18,23 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "prebuild": "shx rm -rf ./dist",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublish": "yarn build"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn build"
+    }
   },
   "dependencies": {
     "@ethersproject/bignumber": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
-    "@mvts/contract-interfaces-js": "git+https://github.com/quic-pro/mvts-contract-interfaces-js.git"
+    "@mvts/contract-interfaces-js": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.17",
+    "husky": "^8.0.3",
     "shx": "^0.3.4",
     "typescript": "^4.9.4"
   }
 }
-
