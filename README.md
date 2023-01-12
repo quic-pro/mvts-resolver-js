@@ -107,3 +107,7 @@ getActualRootRouter(getSignerOrProvider)
     .then((rootRouter) => console.log(`Address of the actual root router: ${rootRouter.address}`))
     .catch((error) => console.log(`Failed to get the actual root router: ${error.message}`));
 ```
+
+## License
+
+[MIT](LICENSE)
