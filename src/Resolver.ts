@@ -1,5 +1,5 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
-import {Curator, Router, Router__factory} from '@mvts/contract-interfaces-js';
+import {Curator, Router, Router__factory as RouterFactory} from '@mvts/contract-interfaces-js';
 
 import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
 import {getActualCurator, nodeIsNumber, nodeIsPool} from './utils';
@@ -133,7 +133,7 @@ export class Resolver {
             throw new Error(`Missing provider for chain ${router.chainId.toString()}.`);
         }
 
-        return Router__factory.connect(router.adr, provider);
+        return RouterFactory.connect(router.adr, provider);
     }
 
 

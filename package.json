@@ -20,7 +20,7 @@
     "prepare": "husky install",
     "prebuild": "shx rm -rf ./dist",
     "build": "tsc",
-    "lint": "eslint ./src",
+    "lint": "eslint .",
     "lint:fix": "yarn lint --fix",
     "prepublish": "yarn build"
   },
@@ -30,6 +30,7 @@
     "@mvts/contract-interfaces-js": "^0.2.0"
   },
   "devDependencies": {
+    "@quic-pro/eslint-config": "^0.1.1",
     "@types/node": "^18.11.17",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",

@@ -408,6 +408,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@quic-pro/eslint-config@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@quic-pro/eslint-config/-/eslint-config-0.1.1.tgz#9d4a1b31eceddf9d7aab0fff69e25f4c5994d491"
+  integrity sha512-TFIsQ3UXXrTLPztrXWUKBPdV5Jbjebm0C0npbI6cc6HliIYZi9FqVsftbIPy7/xg1yzocpYFBRPQqpP8WxVoqg==
+
 "@types/json-schema@^7.0.9":
   version "7.0.11"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
