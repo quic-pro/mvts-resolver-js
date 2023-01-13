@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.2](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.3.2) (2023-01-13)
+
+### Docs
+- docs: add keywords
+
+### Chores
+- chore: apply @quic-pro/eslint-config
+- chore: add license information
+- chore: add changelog
+- chore(packages): bump @quic-pro/eslint-config from 0.1.1 to 0.3.0
+- chore(packages): bump @mvts/contract-interfaces-js from 0.2.0 to 1.0.
+- chore: bump version to 0.3.2
+
 ## [0.3.1](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.3.1) (2023-01-11)
 
 ### Fixed
