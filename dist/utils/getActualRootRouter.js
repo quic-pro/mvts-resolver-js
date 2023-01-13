@@ -16,7 +16,7 @@ function getActualRootRouter(getSignerOrProvider) {
         if (!getSignerOrProvider) {
             getSignerOrProvider = (chainId) => new providers_1.JsonRpcProvider(constants_1.DEFAULT_RPC_URLS[chainId]);
         }
-        return contract_interfaces_js_1.RootRouter__factory.connect(router.adr, getSignerOrProvider(router.chainId.toNumber()));
+        return contract_interfaces_js_1.RootRouterFactory.connect(router.adr, getSignerOrProvider(router.chainId.toNumber()));
     });
 }
 exports.getActualRootRouter = getActualRootRouter;

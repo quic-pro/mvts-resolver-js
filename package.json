@@ -27,7 +27,7 @@
   "dependencies": {
     "@ethersproject/bignumber": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
-    "@mvts/contract-interfaces-js": "^0.2.0"
+    "@mvts/contract-interfaces-js": "1.0.0"
   },
   "devDependencies": {
     "@quic-pro/eslint-config": "^0.3.0",

@@ -378,10 +378,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@mvts/contract-interfaces-js@^0.2.0":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@mvts/contract-interfaces-js/-/contract-interfaces-js-0.2.1.tgz#773f80397e6b01321ae195dc4c3e8b9f39f5967d"
-  integrity sha512-rIicVVtaoqFF7gr5Z3i4pcfIDz4TUNAXYBEkPF3Dt+ox+BoAKJ4W+UHqlIHUv8kq6pgH8QySzZEVFGnDICxErA==
+"@mvts/contract-interfaces-js@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mvts/contract-interfaces-js/-/contract-interfaces-js-1.0.0.tgz#ff27f0c57106232546a88dc671beb21b01b9c871"
+  integrity sha512-hY7hdQlI184hL6hLf+9djSXhWdhTyv2w2DQq2HgBtM54Uhi0JufMKZ3wNxfikEDY/7EzUx0zuMgwYVEb8m5Ahg==
   dependencies:
     "@ethersproject/abi" "^5.7.0"
     "@ethersproject/providers" "^5.7.2"

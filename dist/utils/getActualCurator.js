@@ -8,6 +8,6 @@ function getActualCurator(signerOrProvider) {
     if (!signerOrProvider) {
         signerOrProvider = new providers_1.JsonRpcProvider(constants_1.DEFAULT_RPC_URLS[constants_1.ACTUAL_CURATOR_CHAIN_ID]);
     }
-    return contract_interfaces_js_1.Curator__factory.connect(constants_1.ACTUAL_CURATOR_ADDRESS, signerOrProvider);
+    return contract_interfaces_js_1.CuratorFactory.connect(constants_1.ACTUAL_CURATOR_ADDRESS, signerOrProvider);
 }
 exports.getActualCurator = getActualCurator;

@@ -1,5 +1,5 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
-import {Curator, Router, Router__factory as RouterFactory} from '@mvts/contract-interfaces-js';
+import {Curator, Router, RouterFactory} from '@mvts/contract-interfaces-js';
 
 import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
 import {getActualCurator, nodeIsNumber, nodeIsPool} from './utils';

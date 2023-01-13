@@ -93,7 +93,7 @@ class Resolver {
         if (!provider) {
             throw new Error(`Missing provider for chain ${router.chainId.toString()}.`);
         }
-        return contract_interfaces_js_1.Router__factory.connect(router.adr, provider);
+        return contract_interfaces_js_1.RouterFactory.connect(router.adr, provider);
     }
     // ----- [ PUBLIC METHODS ] ----------------------------------------------------------------------------------------
     getUseCache() {

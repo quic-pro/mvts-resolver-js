@@ -1,6 +1,6 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
 import {Signer} from '@ethersproject/abstract-signer';
-import {Curator, Curator__factory as CuratorFactory} from '@mvts/contract-interfaces-js';
+import {Curator, CuratorFactory} from '@mvts/contract-interfaces-js';
 
 import {DEFAULT_RPC_URLS, ACTUAL_CURATOR_CHAIN_ID, ACTUAL_CURATOR_ADDRESS} from '../constants';
 
