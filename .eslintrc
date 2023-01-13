@@ -7,7 +7,7 @@
     "project": "tsconfig.json"
   },
   "extends": [
-    "@quic-pro/eslint-config",
+    "@quic-pro/eslint-config/recommended",
     "@quic-pro/eslint-config/typescript"
   ]
 }
