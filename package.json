@@ -12,6 +12,8 @@
     "url": "git+https://github.com/quic-pro/mvts-resolver-js.git"
   },
   "keywords": [
+    "blockchain",
+    "smartcontracts",
     "mvts"
   ],
   "main": "dist/index.js",
