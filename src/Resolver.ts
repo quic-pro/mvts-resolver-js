@@ -1,9 +1,8 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
-import {Curator, Router, RouterFactory} from '@mvts/contract-interfaces-js';
+import {CodeMode, Curator, ResponseCode, Router, RouterFactory} from '@mvts/contract-interfaces-js';
 
 import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
-import {getActualCurator, nodeIsNumber, nodeIsPool} from './utils';
-import {ResponseCode} from './types';
+import {getActualCurator} from './utils';
 
 
 export type ResolverOptions = {
@@ -84,7 +83,7 @@ export class Resolver {
         return {
             expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
             nodeData,
-            codes: new Map<number, NodeCache>()
+            codes: new Map<number, NodeCache>(),
         };
     }
 
@@ -93,7 +92,7 @@ export class Resolver {
         let routerCache = this.cache;
 
         do {
-            if (!nodeIsPool(nodeData)) {
+            if (nodeData.mode !== CodeMode.Pool) {
                 throw new Error('Invalid phone number: intermediate node is not a pool.');
             }
 
@@ -154,7 +153,7 @@ export class Resolver {
     public getSipUri(phoneNumber: string): Promise<string> {
         return this.getNodeData(phoneNumber)
             .then((nodeData) => {
-                if (!nodeIsNumber(nodeData)) {
+                if (nodeData.mode !== CodeMode.Number) {
                     throw new Error('Invalid phone number: invalid length.');
                 }
 

@@ -1,8 +1,7 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
 import {Signer} from '@ethersproject/abstract-signer';
-import {RootRouter, RootRouterFactory} from '@mvts/contract-interfaces-js';
+import {ResponseCode, RootRouter, RootRouterFactory} from '@mvts/contract-interfaces-js';
 
-import {ResponseCode} from '../types';
 import {DEFAULT_RPC_URLS} from '../constants';
 import {getActualCurator} from './getActualCurator';
 

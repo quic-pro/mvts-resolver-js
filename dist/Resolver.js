@@ -5,7 +5,6 @@ const providers_1 = require("@ethersproject/providers");
 const contract_interfaces_js_1 = require("@mvts/contract-interfaces-js");
 const constants_1 = require("./constants");
 const utils_1 = require("./utils");
-const types_1 = require("./types");
 class Resolver {
     constructor(options = {}) {
         this.providers = new Map();
@@ -53,14 +52,14 @@ class Resolver {
         return {
             expirationTime: Date.now() + nodeData.ttl.toNumber() * 1000,
             nodeData,
-            codes: new Map()
+            codes: new Map(),
         };
     }
     async getNodeData(phoneNumber) {
         let nodeData = await this.getRootRouterData();
         let routerCache = this.cache;
         do {
-            if (!(0, utils_1.nodeIsPool)(nodeData)) {
+            if (nodeData.mode !== 1 /* CodeMode.Pool */) {
                 throw new Error('Invalid phone number: intermediate node is not a pool.');
             }
             const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
@@ -81,7 +80,7 @@ class Resolver {
                 nodeData = await router.getNodeData(code);
                 routerCache?.codes.set(code, this.createCache(nodeData));
             }
-            if (!nodeData.responseCode.eq(types_1.ResponseCode.OK)) {
+            if (!nodeData.responseCode.eq(200 /* ResponseCode.OK */)) {
                 throw new Error(`Response code ${nodeData.responseCode.toString()}.`);
             }
             routerCache = routerCache?.codes.get(code) ?? null;
@@ -108,7 +107,7 @@ class Resolver {
     getSipUri(phoneNumber) {
         return this.getNodeData(phoneNumber)
             .then((nodeData) => {
-            if (!(0, utils_1.nodeIsNumber)(nodeData)) {
+            if (nodeData.mode !== 0 /* CodeMode.Number */) {
                 throw new Error('Invalid phone number: invalid length.');
             }
             return nodeData.sipUri;
