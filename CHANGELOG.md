@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.3](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.3.3) (2023-02-08)
+
+### Chores
+
+- chore(eslint): change extensions
+- chore: update dependencies
+- chore: bump version to 0.3.3
+
+### Styles
+
+- style(changelog): add padding after headings
+
 ## [0.3.2](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.3.2) (2023-01-13)
 
 ### Docs
