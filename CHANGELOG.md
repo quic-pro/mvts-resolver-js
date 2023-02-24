@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.4.0) (2023-02-24)
+
+### Changed
+
+- feat: add test mode
+
+### Chores
+
+- chore: update dependencies
+- chore: bump version to 0.4.0
+
 ## [0.3.3](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.3.3) (2023-02-08)
 
 ### Chores
