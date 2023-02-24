@@ -9,7 +9,7 @@ function getActualRootRouter(getSignerOrProvider, testnet = false) {
     const curator = (0, getActualCurator_1.getActualCurator)();
     return curator.getRootRouter()
         .then(({ responseCode, router }) => {
-        if (!responseCode.eq(200 /* ResponseCode.OK */)) {
+        if (!responseCode.eq(contract_interfaces_js_1.ResponseCode.OK)) {
             throw new Error(`Response code ${responseCode.toString()}.`);
         }
         if (!getSignerOrProvider) {

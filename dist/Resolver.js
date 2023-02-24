@@ -59,7 +59,7 @@ class Resolver {
         let nodeData = await this.getRootRouterData();
         let routerCache = this.cache;
         do {
-            if (nodeData.mode !== 1 /* CodeMode.Pool */) {
+            if (nodeData.mode !== contract_interfaces_js_1.CodeMode.Pool) {
                 throw new Error('Invalid phone number: intermediate node is not a pool.');
             }
             const poolCodeLength = nodeData.router.poolCodeLength.toNumber();
@@ -80,7 +80,7 @@ class Resolver {
                 nodeData = await router.getNodeData(code);
                 routerCache?.codes.set(code, this.createCache(nodeData));
             }
-            if (!nodeData.responseCode.eq(200 /* ResponseCode.OK */)) {
+            if (!nodeData.responseCode.eq(contract_interfaces_js_1.ResponseCode.OK)) {
                 throw new Error(`Response code ${nodeData.responseCode.toString()}.`);
             }
             routerCache = routerCache?.codes.get(code) ?? null;
@@ -107,7 +107,7 @@ class Resolver {
     getSipUri(phoneNumber) {
         return this.getNodeData(phoneNumber)
             .then((nodeData) => {
-            if (nodeData.mode !== 0 /* CodeMode.Number */) {
+            if (nodeData.mode !== contract_interfaces_js_1.CodeMode.Number) {
                 throw new Error('Invalid phone number: invalid length.');
             }
             return nodeData.sipUri;
