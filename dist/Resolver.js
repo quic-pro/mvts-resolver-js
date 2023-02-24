@@ -9,12 +9,12 @@ class Resolver {
     constructor(options = {}) {
         this.providers = new Map();
         if (options.useDefaultRpcUrls ?? true) {
-            this.addProviders(constants_1.DEFAULT_RPC_URLS);
+            this.addProviders(options.testnet ? constants_1.DEFAULT_TEST_RPC_URLS : constants_1.DEFAULT_RPC_URLS);
         }
         if (options.rpcUrlsAndProviders) {
             this.addProviders(options.rpcUrlsAndProviders);
         }
-        this.curator = options.curator ?? (0, utils_1.getActualCurator)(this.providers.get(constants_1.ACTUAL_CURATOR_CHAIN_ID));
+        this.curator = options.curator ?? (0, utils_1.getActualCurator)(this.providers.get(options.testnet ? constants_1.ACTUAL_TEST_CURATOR_CHAIN_ID : constants_1.ACTUAL_CURATOR_CHAIN_ID));
         this.cache = null;
         this.useCache = options.useCache ?? true;
     }

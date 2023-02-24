@@ -1,7 +1,7 @@
 import {Provider, JsonRpcProvider} from '@ethersproject/providers';
 import {CodeMode, Curator, ResponseCode, Router, RouterFactory} from '@mvts/contract-interfaces-js';
 
-import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS} from './constants';
+import {ACTUAL_CURATOR_CHAIN_ID, DEFAULT_RPC_URLS, ACTUAL_TEST_CURATOR_CHAIN_ID, DEFAULT_TEST_RPC_URLS} from './constants';
 import {getActualCurator} from './utils';
 
 
@@ -10,6 +10,7 @@ export type ResolverOptions = {
     rpcUrlsAndProviders?: Record<number, string | Provider>;
     useDefaultRpcUrls?: boolean;
     useCache?: boolean;
+    testnet?: boolean;
 };
 
 type NodeCache = {
@@ -23,13 +24,13 @@ export class Resolver {
     constructor(options: ResolverOptions = {}) {
         this.providers = new Map<number, Provider>();
         if (options.useDefaultRpcUrls ?? true) {
-            this.addProviders(DEFAULT_RPC_URLS);
+            this.addProviders(options.testnet ? DEFAULT_TEST_RPC_URLS : DEFAULT_RPC_URLS);
         }
         if (options.rpcUrlsAndProviders) {
             this.addProviders(options.rpcUrlsAndProviders);
         }
 
-        this.curator = options.curator ?? getActualCurator(this.providers.get(ACTUAL_CURATOR_CHAIN_ID));
+        this.curator = options.curator ?? getActualCurator(this.providers.get(options.testnet ? ACTUAL_TEST_CURATOR_CHAIN_ID : ACTUAL_CURATOR_CHAIN_ID));
         this.cache = null;
         this.useCache = options.useCache ?? true;
     }

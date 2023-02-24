@@ -5,6 +5,7 @@ export type ResolverOptions = {
     rpcUrlsAndProviders?: Record<number, string | Provider>;
     useDefaultRpcUrls?: boolean;
     useCache?: boolean;
+    testnet?: boolean;
 };
 type NodeCache = {
     expirationTime: number;
