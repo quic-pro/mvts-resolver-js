@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.1](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.4.1) (2023-02-25)
+
+### Fixed
+
+- fix(getActualRootRouter): pass the testnet flag into the getActualCurator call
+
+### Chores
+
+- chore: bump version to 0.4.1
+
+### Styles
+
+- style(constants): order rpc urls
+
 ## [0.4.0](https://github.com/quic-pro/mvts-resolver-js/releases/tag/0.4.0) (2023-02-24)
 
 ### Changed
