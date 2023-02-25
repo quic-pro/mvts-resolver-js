@@ -4,9 +4,9 @@ export const DEFAULT_TEST_RPC_URLS: Record<number, string> = {
     97: 'https://endpoints.omniatech.io/v1/bsc/testnet/public',
     420: 'https://endpoints.omniatech.io/v1/op/goerli/public',
     4002: 'https://endpoints.omniatech.io/v1/fantom/testnet/public',
+    43113: 'https://endpoints.omniatech.io/v1/avax/fuji/public',
     80001: 'https://endpoints.omniatech.io/v1/matic/mumbai/public',
     421613: 'https://endpoints.omniatech.io/v1/arbitrum/goerli/public',
-    43113: 'https://endpoints.omniatech.io/v1/avax/fuji/public',
     11155111: 'https://endpoints.omniatech.io/v1/eth/sepolia/public',
 };
 
