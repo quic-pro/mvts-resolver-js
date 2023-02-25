@@ -6,7 +6,7 @@ const contract_interfaces_js_1 = require("@mvts/contract-interfaces-js");
 const constants_1 = require("../constants");
 const getActualCurator_1 = require("./getActualCurator");
 function getActualRootRouter(getSignerOrProvider, testnet = false) {
-    const curator = (0, getActualCurator_1.getActualCurator)();
+    const curator = (0, getActualCurator_1.getActualCurator)(undefined, testnet);
     return curator.getRootRouter()
         .then(({ responseCode, router }) => {
         if (!responseCode.eq(contract_interfaces_js_1.ResponseCode.OK)) {

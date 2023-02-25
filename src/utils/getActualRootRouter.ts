@@ -7,7 +7,7 @@ import {getActualCurator} from './getActualCurator';
 
 
 export function getActualRootRouter(getSignerOrProvider?: (chainId: number) => Signer | Provider, testnet = false): Promise<RootRouter> {
-    const curator = getActualCurator();
+    const curator = getActualCurator(undefined, testnet);
 
     return curator.getRootRouter()
         .then(({responseCode, router}) => {
